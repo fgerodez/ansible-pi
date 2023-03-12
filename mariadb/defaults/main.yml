@@ -1,0 +1,12 @@
+---
+# defaults file for mariadb
+mariadb_version: 10.6
+mariadb_root_password:
+mariadb_users: []
+mariadb_container_name: mariadb
+mariadb_bridge_name: mariadb
+mariadb_subnet: 10.0.0.0/24
+mariadb_ipv4: 10.0.0.2
+mariadb_local_dumps: 
+mariadb_vol_data:
+mariadb_vol_dumps:

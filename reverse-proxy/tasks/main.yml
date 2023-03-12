@@ -1,0 +1,37 @@
+---
+# tasks file for reverse-proxy
+- name: Create docker network
+  become: true
+  community.docker.docker_network:
+    name: caddy
+    driver_options:
+      com.docker.network.bridge.name: caddy
+
+- name: Create data volume
+  become: true
+  ansible.builtin.file:
+    path: /docker/caddy
+    mode: '0700'
+    state: directory
+    owner: root
+    group: root
+      
+- name: Create container
+  become: true
+  community.docker.docker_container:
+    name: caddy
+    image: lucaslorentz/caddy-docker-proxy
+    restart_policy: always
+    state: started
+    userns_mode: host
+    env:
+      CADDY_INGRESS_NETWORKS: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - name: caddy
+    volumes: "{{ proxy_volumes + ['/var/run/docker.sock:/var/run/docker.sock:ro', '/docker/caddy:/data'] }}"
+
+    
+      

@@ -1,0 +1,54 @@
+---
+# tasks file for docker
+- name: Add GPG apt Key
+  become: true
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    state: present
+    
+- name: Add apt repository
+  become: true
+  ansible.builtin.apt_repository:
+    repo: deb https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
+    state: present
+    
+- name: Install docker
+  become: true
+  ansible.builtin.apt:
+    pkg: docker-ce
+
+- name: Configure the daemon
+  become: true
+  ansible.builtin.copy:
+    dest: "/etc/docker/daemon.json"
+    content: |
+      {
+      "bridge": "none",
+      "userns-remap": "dockremap"
+      }
+
+- name: Create userns mapping
+  become: true
+  ansible.builtin.copy:
+    dest: "{{ item }}"
+    content: |
+      debian:100000:65536
+      dockremap:{{userns_root_uid}}:65536
+  loop:
+    - /etc/subuid
+    - /etc/subgid
+      
+- name: Enable & start service
+  become: true
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Create docker data folder
+  ansible.builtin.file:
+    path: /docker
+    owner: root
+    group: root
+    mode: "0700"

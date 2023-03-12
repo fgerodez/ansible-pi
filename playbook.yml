@@ -1,0 +1,102 @@
+- hosts: pi
+  vars:
+    userns_root_uid: 165536
+  vars_file:
+    - ./external_vars.yml
+  roles:
+    - role: docker
+
+    - role: reverse-proxy
+      vars:
+        proxy_volumes:
+          - /docker/nextcloud/src:/nextcloud
+      
+    - role: mariadb
+      vars:
+        mariadb_uid: 999
+        mariadb_gid: 999
+        mariadb_root_password: "{{ db_root_password }}"
+        mariadb_version: 10.6
+        mariadb_bridge_name: mariadb
+        mariadb_local_dumps: ./data/mariadb/dumps/dump.sql.gz
+        mariadb_vol_data: /docker/mariadb/data
+        mariadb_vol_dumps: /docker/mariadb/dumps
+        mariadb_users: "{{ db_users }}"
+    - role: nextcloud
+      vars:        
+        nextcloud_uid: 82
+        nextcloud_gid: 82
+        nextcloud_hostname: test.mahoneko.net
+        nextcloud_db_network: mariadb
+        nextcloud_proxy_network: caddy
+        nextcloud_proxy_root: /nextcloud
+        nextcloud_bridge_name: nextcloud
+        nextcloud_vol_root: /docker/nextcloud/src
+        nextcloud_vol_config: /docker/nextcloud/config
+        nextcloud_vol_data: /docker/nextcloud/data
+
+  tasks:  
+    - name: Upgrade all packages
+      become: true
+      apt:
+        cache_valid_time: 36000
+        upgrade: true
+        
+    - name: Install base system
+      become: true
+      apt:
+        pkg:
+          - wireguard
+          - rclone
+          - duplicity
+          - fail2ban
+          - jq
+          - doas
+          - curl
+          - nftables
+          - e2fsprogs
+          - dphys-swapfile
+          - vim-tiny
+          - apparmor
+          - apparmor-utils
+          - python3-mysqldb
+                    
+    - name: Copy boot configuration
+      become: true
+      copy: 
+        src: "{{ item.src }}" 
+        dest: "{{ item.dest }}"
+        mode: u=rw,g=r,o=r
+      loop:
+        - { src: ./data/config/boot/raspi-firmware, dest: /etc/default/raspi-firmware }
+        - { src: ./data/config/boot/raspi-firmware-custom, dest: /etc/default/raspi-firmware-custom }
+        - { src: ./data/config/boot/raspi-extra-cmdline, dest: /etc/default/raspi-extra-cmdline }
+      register: bootConfig
+
+    - name: Update initramfs
+      become: true
+      command: /usr/sbin/update-initramfs -u -k all
+      when: bootConfig.changed  
+
+    - name: Copy systemd units
+      become: true
+      copy:
+        src: ./data/config/systemd-units/
+        dest: /etc/systemd/system/
+        mode: u=rw,g=r,o=r
+        directory_mode: u=rwx,g=rx,o=rx
+      register: systemdUnits
+      
+    - name: Start systemd services
+      become: true
+      systemd:
+        name: "{{ item }}"
+        enabled: true
+        daemon_reload: true
+      loop:
+        - fail2ban.service
+        - nftables.service
+        - nextcloud-cron.timer
+
+
+
