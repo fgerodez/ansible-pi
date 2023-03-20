@@ -1,0 +1,111 @@
+---
+# tasks file for mail
+- name: Create volume base
+  become: true
+  ansible.builtin.file:
+    path: "{{ mail_vol_base }}"
+    mode: "0700"
+    state: directory
+    owner: root
+    group: root
+
+- name: Create mail volumes
+  become: true
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: "0700"
+    state: directory
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"      
+  loop:
+    - { path : "{{ mail_vol_base }}/mail" }
+    - { path : "{{ mail_vol_base }}/certbot" }
+
+- name: Copy ovh api keys
+  become: true
+  ansible.builtin.copy:
+    src: ./data/mail/ovh.ini
+    dest: "{{ mail_vol_base }}/certbot/ovh.ini"
+    mode: "0600"
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+      
+- name: Initialize ssl certificate
+  become: true
+  community.docker.docker_container:
+    name: certbot
+    detach: false
+    cleanup: yes
+    image: certbot/dns-ovh
+    command: "certonly \
+    --dns-ovh \
+    --dns-ovh-credentials /etc/letsencrypt/ovh.ini \
+    --dns-ovh-propagation-seconds 60 \
+    --non-interactive \
+    --agree-tos \
+    --email {{ mail_owner_email }} \
+    --domains {{ mail_hostname }}"
+    volumes:
+      - "{{ mail_vol_base }}/certbot:/etc/letsencrypt"
+
+- name: Create docker network
+  become: true
+  community.docker.docker_network:
+    name: "{{ mail_bridge_name }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ mail_bridge_name }}"
+
+- name: Check dhparam last update
+  become: true
+  ansible.builtin.stat:
+    path: "{{ mail_vol_base }}/dhparam.pem"
+  register: dhparam
+
+- name: Regenerate old dhparam
+  delegate_to: localhost
+  community.crypto.openssl_dhparam:
+    path: ./data/mail/dhparam.pem
+    size: 4096
+    force: true
+  # 7 days = 604800 seconds
+  when: >
+    not hostvars[inventory_hostname].dhparam.stat.exists or
+    ansible_date_time.epoch|float - hostvars[inventory_hostname].dhparam.stat.mtime > 604800
+
+- name: Copy dhparam
+  become: true
+  ansible.builtin.copy:
+    src: ./data/mail/dhparam.pem
+    dest: "{{ mail_vol_base }}/"
+    mode: "0600"
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+  
+- name: Postfix container
+  become: true
+  community.docker.docker_container:
+    name: "{{ postfix_container_name }}"
+    image: "mahoneko/postfix:latest"
+    restart_policy: always
+    state: started
+    pull: true
+    cap_drop:
+      - all
+    capabilities:
+      - setgid
+      - setuid
+      - chown
+      - fowner
+      - dac_override
+    ports:
+      - "25:2525"
+      - "587:25587"
+    networks:
+      - name: "{{ mail_bridge_name }}"
+    env:
+      HOSTNAME: "{{ mail_hostname }}"
+      SSL_CERT_PUBLIC: "/etc/letsencrypt/live/{{ mail_hostname }}/fullchain.pem"
+      SSL_CERT_PRIVATE: "/etc/letsencrypt/live/{{ mail_hostname }}/privkey.pem"
+    volumes:
+      - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
+      - "{{ mail_vol_base }}/dhparam.pem:/etc/postfix/dhparam.pem:ro"

@@ -23,7 +23,6 @@
     dest: "/etc/docker/daemon.json"
     content: |
       {
-      "bridge": "none",
       "userns-remap": "dockremap"
       }
 

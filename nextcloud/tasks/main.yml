@@ -7,7 +7,17 @@
     driver_options:
       com.docker.network.bridge.name: "{{ nextcloud_bridge_name }}"
 
-- name: Create data volumes
+# Source volume is world readable for the reverse proxy
+- name: Create nextcloud source volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ nextcloud_vol_base }}/src"
+    mode: "0775"
+    state: directory
+    owner: "{{ userns_root_uid|int + nextcloud_uid|int }}"
+    group: "{{ userns_root_uid|int + nextcloud_gid|int }}"
+      
+- name: Create nextcloud config and data volumes
   become: true
   ansible.builtin.file:
     path: "{{ item.path }}"
@@ -16,10 +26,21 @@
     owner: "{{ userns_root_uid|int + nextcloud_uid|int }}"
     group: "{{ userns_root_uid|int + nextcloud_gid|int }}"
   loop:
-    - { path : "{{ nextcloud_vol_root }}" }
-    - { path : "{{ nextcloud_vol_config }}" }
-    - { path : "{{ nextcloud_vol_data }}" }
+    - { path : "{{ nextcloud_vol_base }}/config" }
+    - { path : "{{ nextcloud_vol_base }}/data" }
           
+- name: Create mariadb volumes
+  become: true
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: '0770'
+    state: directory
+    owner: "{{ userns_root_uid|int + mariadb_uid|int }}"
+    group: "{{ userns_root_uid|int + mariadb_gid|int }}"
+  loop:
+    - { path: "{{ mariadb_vol_base }}/data" }
+    - { path: "{{ mariadb_vol_base }}/dumps" }
+    
 - name: Nextcloud container
   become: true
   community.docker.docker_container:
@@ -27,26 +48,33 @@
     image: "mahoneko/nextcloud:latest"
     restart_policy: always
     user: "{{ nextcloud_uid }}:{{ nextcloud_gid }}"
+    pull: true
     networks:
       - name: "{{ nextcloud_bridge_name }}"
-      - name: "{{ nextcloud_proxy_network }}"
-      - name: "{{ nextcloud_db_network }}"
     state: started
     cap_drop:
       - all
-    labels:
-      caddy: "{{ nextcloud_hostname }}"
-      caddy.root: "* {{ nextcloud_proxy_root }}"
-      caddy.php_fastcgi: "{{ '{{ upstreams 9000 }}' }}"
-      caddy.php_fastcgi.root: "/var/www/html"
-      caddy.php_fastcgi.capture_stderr:
-      caddy.file_server:
-      caddy.0_redir: "/.well-known/carddav /remote.php/dav 301"
-      caddy.1_redir: "/.well-known/caldav /remote.php/dav 301"
-      caddy.header: "Strict-Transport-Security max-age=15552000"
-      caddy.@blocked.path: "/data/* /config/* /lib/* /3rdparty/* /templates/* /build/* /tests/* /occ /console.php /cron.php"
-      caddy.respond: "@blocked 404"
     volumes:
-      - "{{ nextcloud_vol_root }}:/var/www/html"
-      - "{{ nextcloud_vol_config }}:/var/www/html/config"
-      - "{{ nextcloud_vol_data }}:/var/www/html/data"
+      - "{{ nextcloud_vol_base }}/src:/var/www/html"
+      - "{{ nextcloud_vol_base }}/config:/var/www/html/config"
+      - "{{ nextcloud_vol_base }}/data:/var/www/html/data"
+  
+- name: Mariadb container
+  become: true
+  no_log: true
+  community.docker.docker_container:
+    name: mariadb
+    image: "mahoneko/mariadb:latest"
+    user: "{{ mariadb_uid }}:{{ mariadb_gid }}"
+    pull: true
+    restart_policy: always
+    cap_drop:
+      - all
+    networks:
+      - name: "{{ nextcloud_bridge_name }}"
+    state: started
+    volumes:
+      - "{{ mariadb_vol_base }}/data:/var/lib/mysql"
+      - "{{ mariadb_vol_base }}/dumps:/docker-entrypoint-initdb.d:ro"
+    env:
+      MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"

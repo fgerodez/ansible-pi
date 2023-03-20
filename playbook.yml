@@ -1,40 +1,48 @@
 - hosts: pi
   vars:
     userns_root_uid: 165536
-  vars_file:
+    proxy_ns_uid: 1000
+    proxy_ns_gid: 1000
+    nextcloud_network: nextcloud
+    nextcloud_container: nextcloud
+  vars_files:
     - ./external_vars.yml
   roles:
     - role: docker
-
-    - role: reverse-proxy
-      vars:
-        proxy_volumes:
-          - /docker/nextcloud/src:/nextcloud
       
-    - role: mariadb
-      vars:
-        mariadb_uid: 999
-        mariadb_gid: 999
-        mariadb_root_password: "{{ db_root_password }}"
-        mariadb_version: 10.6
-        mariadb_bridge_name: mariadb
-        mariadb_local_dumps: ./data/mariadb/dumps/dump.sql.gz
-        mariadb_vol_data: /docker/mariadb/data
-        mariadb_vol_dumps: /docker/mariadb/dumps
-        mariadb_users: "{{ db_users }}"
     - role: nextcloud
       vars:        
         nextcloud_uid: 82
         nextcloud_gid: 82
-        nextcloud_hostname: test.mahoneko.net
-        nextcloud_db_network: mariadb
-        nextcloud_proxy_network: caddy
-        nextcloud_proxy_root: /nextcloud
-        nextcloud_bridge_name: nextcloud
-        nextcloud_vol_root: /docker/nextcloud/src
-        nextcloud_vol_config: /docker/nextcloud/config
-        nextcloud_vol_data: /docker/nextcloud/data
+        nextcloud_container_name: "{{ nextcloud_container }}"
+        nextcloud_bridge_name: "{{ nextcloud_network }}"
+        nextcloud_vol_base: /docker/nextcloud
+        mariadb_uid: 999
+        mariadb_gid: 999
+        mariadb_root_password: "{{ db_root_password }}"
+        mariadb_vol_base: /docker/mariadb
 
+    - role: mail
+      vars:
+        mail_bridge_name: mail
+        mail_hostname: "{{ mail_server_hostname }}"
+        mail_vol_base: /docker/mail
+        postfix_container_name: postfix
+        
+    - role: reverse-proxy
+      vars:
+        proxy_uid: "{{ proxy_ns_uid }}"
+        proxy_gid: "{{ proxy_ns_gid }}"
+        proxy_volumes:
+          - /docker/nextcloud/src:/nextcloud
+        proxy_networks:
+          - name: "{{ nextcloud_network }}"
+        proxy_env:
+          CLOUD_HOSTNAME: "{{ cloud_hostname }}"
+          CLOUD_ROOT: /nextcloud
+          CLOUD_FPM: "{{ nextcloud_container }}:9000"
+          CLOUD_FCGI_ROOT: /var/www/html
+        
   tasks:  
     - name: Upgrade all packages
       become: true

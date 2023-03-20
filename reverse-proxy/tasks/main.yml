@@ -3,11 +3,11 @@
 - name: Create docker network
   become: true
   community.docker.docker_network:
-    name: caddy
+    name: 00-caddy # Get first name in lexical order for network priority
     driver_options:
       com.docker.network.bridge.name: caddy
 
-- name: Create data volume
+- name: Create volume base
   become: true
   ansible.builtin.file:
     path: /docker/caddy
@@ -15,23 +15,37 @@
     state: directory
     owner: root
     group: root
-      
+
+- name: Create volumes
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: '0700'
+    state: directory
+    owner: "{{ userns_root_uid|int + proxy_uid|int}}"
+    group: "{{ userns_root_uid|int + proxy_gid|int}}"
+  loop:
+    - /docker/caddy/config
+    - /docker/caddy/data
+    
 - name: Create container
   become: true
   community.docker.docker_container:
     name: caddy
-    image: lucaslorentz/caddy-docker-proxy
+    image: mahoneko/caddy:latest
     restart_policy: always
     state: started
-    userns_mode: host
-    env:
-      CADDY_INGRESS_NETWORKS: caddy
+    pull: true
+    cap_drop:
+      - all
+    capabilities:
+      - net_bind_service
+    user: "{{ proxy_uid }}:{{ proxy_gid }}"
+    env: "{{ proxy_env }}"
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:8080"
+      - "443:8443"
     networks:
-      - name: caddy
-    volumes: "{{ proxy_volumes + ['/var/run/docker.sock:/var/run/docker.sock:ro', '/docker/caddy:/data'] }}"
-
-    
-      
+      - name: 00-caddy
+      - name: nextcloud
+    volumes: "{{ proxy_volumes + [ '/docker/caddy/data:/data', '/docker/caddy/config:/config' ] }}"
