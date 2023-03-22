@@ -78,3 +78,21 @@
       - "{{ mariadb_vol_base }}/dumps:/docker-entrypoint-initdb.d:ro"
     env:
       MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
+
+- name: Copy nextcloud systemd units
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /etc/systemd/system/
+    mode: u=rw,g=r,o=r
+    directory_mode: u=rwx,g=rx,o=rx
+  loop:
+    - ./data/nextcloud/nextcloud-cron.service
+    - ./data/nextcloud/nextcloud-cron.timer
+      
+- name: Enable nextcloud cron timer
+  become: true
+  ansible.builtin.systemd:
+    name: nextcloud-cron.timer
+    enabled: true
+    daemon_reload: true

@@ -1,13 +1,13 @@
 - hosts: pi
   vars:
     userns_root_uid: 165536
-    proxy_ns_uid: 1000
-    proxy_ns_gid: 1000
     nextcloud_network: nextcloud
     nextcloud_container: nextcloud
   vars_files:
     - ./external_vars.yml
   roles:
+    - role: system
+    
     - role: docker
       
     - role: nextcloud
@@ -27,6 +27,7 @@
         mail_bridge_name: mail
         mail_hostname: "{{ mail_server_hostname }}"
         mail_vol_base: /docker/mail
+        dhparam_size: 4096
         postfix_container_name: postfix
         opendkim_container_name: opendkim
         opendkim_uid: 100
@@ -37,8 +38,8 @@
         
     - role: reverse-proxy
       vars:
-        proxy_uid: "{{ proxy_ns_uid }}"
-        proxy_gid: "{{ proxy_ns_gid }}"
+        proxy_uid: 1000
+        proxy_gid: 1000
         proxy_volumes:
           - /docker/nextcloud/src:/nextcloud
         proxy_networks:
@@ -48,71 +49,4 @@
           CLOUD_ROOT: /nextcloud
           CLOUD_FPM: "{{ nextcloud_container }}:9000"
           CLOUD_FCGI_ROOT: /var/www/html
-        
-  tasks:  
-    - name: Upgrade all packages
-      become: true
-      apt:
-        cache_valid_time: 36000
-        upgrade: true
-        
-    - name: Install base system
-      become: true
-      apt:
-        pkg:
-          - wireguard
-          - rclone
-          - duplicity
-          - fail2ban
-          - jq
-          - doas
-          - curl
-          - nftables
-          - e2fsprogs
-          - dphys-swapfile
-          - vim-tiny
-          - apparmor
-          - apparmor-utils
-                  
-    - name: Copy boot configuration
-      become: true
-      copy: 
-        src: "{{ item.src }}" 
-        dest: "{{ item.dest }}"
-        mode: u=rw,g=r,o=r
-      loop:
-        - { src: ./data/config/boot/raspi-firmware, dest: /etc/default/raspi-firmware }
-        - { src: ./data/config/boot/raspi-firmware-custom, dest: /etc/default/raspi-firmware-custom }
-        - { src: ./data/config/boot/raspi-extra-cmdline, dest: /etc/default/raspi-extra-cmdline }
-      register: bootConfig
-
-    - name: Update initramfs
-      become: true
-      command: /usr/sbin/update-initramfs -u -k all
-      when: bootConfig.changed  
-
-    - name: Copy systemd units
-      become: true
-      copy:
-        src: ./data/config/systemd-units/
-        dest: /etc/systemd/system/
-        mode: u=rw,g=r,o=r
-        directory_mode: u=rwx,g=rx,o=rx
-      register: systemdUnits
-      
-    - name: Start systemd services
-      become: true
-      systemd:
-        name: "{{ item }}"
-        enabled: true
-        daemon_reload: true
-      loop:
-        - fail2ban.service
-        - nftables.service
-        - nextcloud-cron.timer
-
-
-
-
-
 

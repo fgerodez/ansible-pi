@@ -17,15 +17,6 @@
   ansible.builtin.apt:
     pkg: docker-ce
 
-- name: Configure the daemon
-  become: true
-  ansible.builtin.copy:
-    dest: "/etc/docker/daemon.json"
-    content: |
-      {
-      "userns-remap": "dockremap"
-      }
-
 - name: Create userns mapping
   become: true
   ansible.builtin.copy:
@@ -35,7 +26,24 @@
   loop:
     - /etc/subuid
     - /etc/subgid
-      
+    
+- name: Configure the daemon
+  become: true
+  ansible.builtin.copy:
+    dest: "/etc/docker/daemon.json"
+    content: |
+      {
+      "userns-remap": "default"
+      }
+  register: docker_init
+
+- name: Restart docker
+  become: true
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  when: docker_init.changed
+    
 - name: Enable & start service
   become: true
   ansible.builtin.systemd:
@@ -45,8 +53,10 @@
     daemon_reload: true
 
 - name: Create docker data folder
+  become: true
   ansible.builtin.file:
     path: /docker
     owner: root
     group: root
     mode: "0700"
+    state: directory

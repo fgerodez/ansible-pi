@@ -95,7 +95,7 @@
   delegate_to: localhost
   community.crypto.openssl_dhparam:
     path: ./data/mail/dhparam.pem
-    size: 4096
+    size: "{{ dhparam_size }}"
     force: true
   when: hostvars[inventory_hostname].dhparam_regen
 
@@ -149,8 +149,10 @@
       - fowner
       - dac_override
     ports:
-      - "25:2525"
-      - "587:25587"
+      - "[::]:25:2525"
+      - "[::]:587:25587"
+      - "0.0.0.0:25:2525"
+      - "0.0.0.0:587:25587"
     networks:
       - name: "{{ mail_bridge_name }}"
     env:
@@ -180,8 +182,10 @@
       - dac_override
       - kill
     ports:
-      - "4190:4190"
-      - "993:10993"
+      - "[::]:4190:4190"
+      - "[::]:993:10993"
+      - "0.0.0.0:4190:4190"
+      - "0.0.0.0:993:10993"
     networks:
       - name: "{{ mail_bridge_name }}"
     env:
@@ -191,3 +195,21 @@
       - "{{ mail_vol_base }}/dhparam.pem:/etc/dovecot/dhparam.pem:ro"
       - "{{ mail_vol_base }}/mail.sqlite:/etc/dovecot/mail.sqlite:ro"
       - "{{ mail_vol_base}}/mail:/var/mail"
+
+- name: Copy certbot systemd units
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /etc/systemd/system/
+    mode: u=rw,g=r,o=r
+    directory_mode: u=rwx,g=rx,o=rx
+  loop:
+    - ./data/mail/certbot.service
+    - ./data/mail/certbot.timer
+      
+- name: Enable certbot timer
+  become: true
+  ansible.builtin.systemd:
+    name: certbot.timer
+    enabled: true
+    daemon_reload: true

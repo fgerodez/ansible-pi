@@ -1,0 +1,1 @@
+quiet dwc_otg.lpm_enable=0
