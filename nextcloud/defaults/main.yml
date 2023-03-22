@@ -1,6 +1,0 @@
----
-# defaults file for nextcloud
-nextcloud_bridge_name: nextcloud
-nextcloud_container_name: nextcloud
-nextcloud_version: 25
-nextcloud_db_network: mariadb

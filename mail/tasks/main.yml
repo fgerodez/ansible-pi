@@ -39,7 +39,7 @@
 - name: Copy opendkim key
   become: true
   ansible.builtin.copy:
-    src: ./data/opendkim/mail.private
+    src: ./data/mail/mail.private
     dest: "{{ mail_vol_base }}/"
     mode: "0600"
     owner: "{{ userns_root_uid|int + opendkim_uid }}"
@@ -86,16 +86,18 @@
     path: "{{ mail_vol_base }}/dhparam.pem"
   register: dhparam
 
+- name: Should regenerate dhparam older than 7 days
+  ansible.builtin.set_fact:
+    dhparam_regen: "{{ not dhparam.stat.exists or \
+    ansible_date_time.epoch|float - dhparam.stat.mtime > 604800 }}"
+
 - name: Regenerate old dhparam
   delegate_to: localhost
   community.crypto.openssl_dhparam:
     path: ./data/mail/dhparam.pem
     size: 4096
     force: true
-  # 7 days = 604800 seconds
-  when: >
-    not hostvars[inventory_hostname].dhparam.stat.exists or
-    ansible_date_time.epoch|float - hostvars[inventory_hostname].dhparam.stat.mtime > 604800
+  when: hostvars[inventory_hostname].dhparam_regen
 
 - name: Copy dhparam
   become: true
@@ -105,6 +107,14 @@
     mode: "0600"
     owner: "{{ userns_root_uid }}"
     group: "{{ userns_root_uid }}"
+  when: dhparam_regen
+
+- name: Remove local dhparam
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: ./data/mail/dhparam.pem
+    state: absent
+  when: dhparam_regen
 
 - name: Opendkim container
   become: true
@@ -168,6 +178,7 @@
       - chown
       - fowner
       - dac_override
+      - kill
     ports:
       - "4190:4190"
       - "993:10993"

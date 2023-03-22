@@ -6,9 +6,3 @@ Description=Nextcloud cron service
 
 [Service]
 ExecStart=/usr/bin/docker exec nextcloud /usr/local/bin/php -f /var/www/html/cron.php
-
-
-
-
-
-
