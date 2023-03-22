@@ -9,27 +9,51 @@
     owner: root
     group: root
 
-- name: Create mail volumes
+- name: Create certbot volume
   become: true
   ansible.builtin.file:
-    path: "{{ item.path }}"
+    path: "{{ mail_vol_base }}/certbot"
     mode: "0700"
     state: directory
     owner: "{{ userns_root_uid }}"
     group: "{{ userns_root_uid }}"      
-  loop:
-    - { path : "{{ mail_vol_base }}/mail" }
-    - { path : "{{ mail_vol_base }}/certbot" }
 
+- name: Create dovecot mail volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ mail_vol_base }}/mail"
+    mode: "0700"
+    state: directory
+    owner: "{{ userns_root_uid|int + dovecot_vmail_uid }}"
+    group: "{{ userns_root_uid|int + dovecot_vmail_gid }}"      
+    
 - name: Copy ovh api keys
   become: true
   ansible.builtin.copy:
     src: ./data/mail/ovh.ini
-    dest: "{{ mail_vol_base }}/certbot/ovh.ini"
+    dest: "{{ mail_vol_base }}/ovh.ini"
     mode: "0600"
     owner: "{{ userns_root_uid }}"
     group: "{{ userns_root_uid }}"
-      
+
+- name: Copy opendkim key
+  become: true
+  ansible.builtin.copy:
+    src: ./data/opendkim/mail.private
+    dest: "{{ mail_vol_base }}/"
+    mode: "0600"
+    owner: "{{ userns_root_uid|int + opendkim_uid }}"
+    group: "{{ userns_root_uid|int + opendkim_gid }}"
+
+- name: Copy mail database
+  become: true
+  ansible.builtin.copy:
+    src: ./data/mail/mail.sqlite
+    dest: "{{ mail_vol_base }}/"
+    mode: "0600"
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+  
 - name: Initialize ssl certificate
   become: true
   community.docker.docker_container:
@@ -47,6 +71,7 @@
     --domains {{ mail_hostname }}"
     volumes:
       - "{{ mail_vol_base }}/certbot:/etc/letsencrypt"
+      - "{{ mail_vol_base }}/ovh.ini:/etc/letsencrypt/ovh.ini:ro"
 
 - name: Create docker network
   become: true
@@ -80,7 +105,23 @@
     mode: "0600"
     owner: "{{ userns_root_uid }}"
     group: "{{ userns_root_uid }}"
-  
+
+- name: Opendkim container
+  become: true
+  community.docker.docker_container:
+    name: "{{ opendkim_container_name }}"
+    image: "mahoneko/opendkim:latest"
+    restart_policy: always
+    state: started
+    pull: true
+    user: "{{ opendkim_uid }}:{{ opendkim_gid }}"
+    cap_drop:
+      - all
+    networks:
+      - name: "{{ mail_bridge_name }}"
+    volumes:
+      - "{{ mail_vol_base }}/mail.private:/etc/opendkim/mail.private:ro"
+    
 - name: Postfix container
   become: true
   community.docker.docker_container:
@@ -109,3 +150,33 @@
     volumes:
       - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
       - "{{ mail_vol_base }}/dhparam.pem:/etc/postfix/dhparam.pem:ro"
+      - "{{ mail_vol_base }}/mail.sqlite:/etc/postfix/mail.sqlite:ro"
+
+- name: Dovecot container
+  become: true
+  community.docker.docker_container:
+    name: "{{ dovecot_container_name }}"
+    image: "mahoneko/dovecot:latest"
+    restart_policy: always
+    state: started
+    pull: true
+    cap_drop:
+      - all
+    capabilities:
+      - setgid
+      - setuid
+      - chown
+      - fowner
+      - dac_override
+    ports:
+      - "4190:4190"
+      - "993:10993"
+    networks:
+      - name: "{{ mail_bridge_name }}"
+    env:
+      HOSTNAME: "{{ mail_hostname }}"
+    volumes:
+      - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
+      - "{{ mail_vol_base }}/dhparam.pem:/etc/dovecot/dhparam.pem:ro"
+      - "{{ mail_vol_base }}/mail.sqlite:/etc/dovecot/mail.sqlite:ro"
+      - "{{ mail_vol_base}}/mail:/var/mail"

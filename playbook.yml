@@ -28,6 +28,12 @@
         mail_hostname: "{{ mail_server_hostname }}"
         mail_vol_base: /docker/mail
         postfix_container_name: postfix
+        opendkim_container_name: opendkim
+        opendkim_uid: 100
+        opendkim_gid: 100
+        dovecot_container_name: dovecot
+        dovecot_vmail_uid: 5000
+        dovecot_vmail_gid: 5000
         
     - role: reverse-proxy
       vars:
