@@ -2,7 +2,8 @@
   vars:
     userns_root_uid: 165536
     nextcloud_network: nextcloud
-    nextcloud_container: nextcloud
+    media_gid: 1500
+    torrent_network: transmission
   vars_files:
     - ./external_vars.yml
   roles:
@@ -14,7 +15,7 @@
       vars:
         nextcloud_uid: 82
         nextcloud_gid: 82
-        nextcloud_container_name: "{{ nextcloud_container }}"
+        nextcloud_container_name: "nextcloud"
         nextcloud_bridge_name: "{{ nextcloud_network }}"
         nextcloud_vol_base: /docker/nextcloud
         mariadb_uid: 999
@@ -35,6 +36,13 @@
         dovecot_container_name: dovecot
         dovecot_vmail_uid: 5000
         dovecot_vmail_gid: 5000
+
+    - role: torrent
+      vars:
+        torrent_vol_base: /docker/media
+        transmission_uid: 2000
+        transmission_container_name: "transmission"
+        transmission_bridge_name: "transmission"
         
     - role: reverse-proxy
       vars:
@@ -44,9 +52,4 @@
           - /docker/nextcloud/src:/nextcloud
         proxy_networks:
           - name: "{{ nextcloud_network }}"
-        proxy_env:
-          CLOUD_HOSTNAME: "{{ cloud_hostname }}"
-          CLOUD_ROOT: /nextcloud
-          CLOUD_FPM: "{{ nextcloud_container }}:9000"
-          CLOUD_FCGI_ROOT: /var/www/html
-
+          - name: "{{ torrent_network }}"

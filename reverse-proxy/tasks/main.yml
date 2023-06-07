@@ -11,7 +11,7 @@
   become: true
   ansible.builtin.file:
     path: /docker/caddy
-    mode: '0700'
+    mode: "0700"
     state: directory
     owner: root
     group: root
@@ -20,19 +20,30 @@
   become: true
   ansible.builtin.file:
     path: "{{ item }}"
-    mode: '0700'
+    mode: "0700"
     state: directory
-    owner: "{{ userns_root_uid|int + proxy_uid|int}}"
-    group: "{{ userns_root_uid|int + proxy_gid|int}}"
+    owner: "{{ userns_root_uid|int + proxy_uid|int }}"
+    group: "{{ userns_root_uid|int + proxy_gid|int }}"
   loop:
-    - /docker/caddy/config
     - /docker/caddy/data
+    - /docker/caddy/etc
+
+- name: Copy config files
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/docker/caddy/etc/"
+    mode: "0600"
+    owner: "{{ userns_root_uid|int + proxy_uid|int }}"
+    group: "{{ userns_root_uid|int + proxy_gid|int }}"
+  with_fileglob:
+    - "./data/caddy/*"
     
 - name: Create container
   become: true
   community.docker.docker_container:
     name: caddy
-    image: mahoneko/caddy:latest
+    image: caddy:latest
     restart_policy: always
     state: started
     pull: true
@@ -41,7 +52,6 @@
     capabilities:
       - net_bind_service
     user: "{{ proxy_uid }}:{{ proxy_gid }}"
-    env: "{{ proxy_env }}"
     ports:
       - "[::]:80:8080"
       - "[::]:443:8443"
@@ -50,4 +60,5 @@
     networks:
       - name: 00-caddy
       - name: nextcloud
-    volumes: "{{ proxy_volumes + [ '/docker/caddy/data:/data', '/docker/caddy/config:/config' ] }}"
+      - name: transmission
+    volumes: "{{ proxy_volumes + [ '/docker/caddy/data:/data', '/docker/caddy/etc:/etc/caddy' ] }}"

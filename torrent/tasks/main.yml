@@ -1,0 +1,50 @@
+---
+# tasks file for torrent
+- name: Create docker network
+  become: true
+  community.docker.docker_network:
+    name: "{{ transmission_bridge_name }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ transmission_bridge_name }}"
+
+- name: Create volume base
+  become: true
+  ansible.builtin.file:
+    path: "{{ torrent_vol_base }}"
+    mode: "0770"
+    state: directory
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid|int + media_gid }}"
+
+- name: Create data folder
+  become: true
+  ansible.builtin.file:
+    path: "{{ torrent_vol_base }}/data"
+    mode: "0770"
+    state: directory
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid|int + media_gid }}"
+
+- name: Create transmission folder
+  become: true
+  ansible.builtin.file:
+    path: "{{ torrent_vol_base }}/transmission"
+    mode: "0700"
+    state: directory
+    owner: "{{ userns_root_uid|int + transmission_uid }}"
+    group: "{{ userns_root_uid|int + transmission_uid }}"
+
+- name: Create transmission container
+  become: true
+  community.docker.docker_container:
+    name: "{{ transmission_container_name }}"
+    image: "mahoneko/transmission:latest"
+    user: "{{ transmission_uid }}:{{ media_gid }}"
+    state: started
+    pull: true
+    networks:
+      - name: "{{ transmission_bridge_name }}"
+    cap_drop:
+      - all
+    volumes:
+      - "{{ torrent_vol_base }}:/media"
