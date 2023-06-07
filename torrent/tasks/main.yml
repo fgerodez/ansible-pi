@@ -40,6 +40,7 @@
     name: "{{ transmission_container_name }}"
     image: "mahoneko/transmission:latest"
     user: "{{ transmission_uid }}:{{ media_gid }}"
+    restart_policy: always
     state: started
     pull: true
     networks:
