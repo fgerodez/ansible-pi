@@ -8,65 +8,13 @@
   become: true
   apt:
     pkg:
-      - wireguard
-      - jq
-      - rclone
-      - duplicity
-      - fail2ban
       - doas
-      - nftables
       - e2fsprogs
       - dphys-swapfile
       - vim-tiny
       - apparmor
       - apparmor-utils
 
-- name: Copy nftables ruleset
-  become: true
-  ansible.builtin.copy:
-    src: ./data/system/nftables.conf
-    dest: /etc/nftables.conf
-    mode: u=rw,g=,o=
-      
-- name: Copy custom scripts
-  become: true
-  ansible.builtin.copy:
-    src: ./data/system/mahoneko-wg.sh
-    dest: /usr/local/bin/
-    mode: 700
-
-- name: Copy wireguard credentials
-  become: true
-  ansible.builtin.copy:
-    src: ./data/system/login.conf
-    dest: /etc/wireguard/
-    mode: u=rw,g=,o=
-
-- name: Copy systemd services
-  become: true
-  ansible.builtin.copy:
-    src: "{{ item }}"
-    dest: /etc/systemd/system/
-    mode: u=rw,g=r,o=r
-  with_fileglob:
-    - "./data/system/systemd/**"
-
-- name: Enable nftables service
-  become: true
-  ansible.builtin.systemd:
-    name: nftables.service
-    enabled: true
-    daemon_reload: true
-    state: "restarted"
-    
-- name: Enable wireguard service
-  become: true
-  ansible.builtin.systemd:
-    name: wg-mahoneko.service
-    enabled: true
-    daemon_reload: true
-    state: "restarted"
-    
 - name: Copy boot configuration
   become: true
   copy: 
@@ -84,6 +32,4 @@
   become: true
   command: /usr/sbin/update-initramfs -u -k all
   when: rpi and bootConfig.changed  
-
-
 

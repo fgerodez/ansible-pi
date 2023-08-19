@@ -1,0 +1,39 @@
+- name: Install system packages
+  become: true
+  apt:
+    pkg:
+      - wireguard
+      - jq
+
+- name: Copy wireguard script
+  become: true
+  register: wireguardscript
+  ansible.builtin.copy:
+    src: ./data/wireguard/mahoneko-wg.sh
+    dest: /usr/local/bin/
+    mode: 700
+
+- name: Copy wireguard credentials
+  become: true
+  register: wireguardconfig
+  ansible.builtin.copy:
+    src: ./data/wireguard/login.conf
+    dest: /etc/wireguard/
+    mode: u=rw,g=,o=
+
+- name: Copy systemd service
+  become: true
+  register: wireguardservice
+  ansible.builtin.copy:
+    src: "./data/wireguard/wg-mahoneko.service"
+    dest: /etc/systemd/system/
+    mode: u=rw,g=r,o=r
+    
+- name: Enable wireguard service
+  become: true
+  ansible.builtin.systemd:
+    name: wg-mahoneko.service
+    daemon_reload: "{{ wireguardservice.changed }}"
+    enabled: true
+    state: "{{ 'restarted' if wireguardconfig.changed or wireguardscript.changed else 'started' }}"
+

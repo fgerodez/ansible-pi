@@ -1,0 +1,29 @@
+- name: Install package
+  become: true
+  apt:
+    pkg:
+      - fail2ban
+
+- name: Copy configuration
+  become: true
+  register: fail2banconfig
+  ansible.builtin.copy:
+    src: "./data/fail2ban/etc/"
+    dest: /etc/fail2ban/
+    mode: u=rw,g=r,o=r
+
+- name: Copy systemd service
+  register: fail2banservice
+  become: true
+  ansible.builtin.copy:
+    src: "./data/fail2ban/override.conf"
+    dest: /etc/systemd/system/fail2ban.service.d/
+    mode: u=rw,g=r,o=r
+
+- name: Enable systemd service
+  become: true
+  ansible.builtin.systemd:
+    name: fail2ban.service
+    daemon_reload: "{{ fail2banservice.changed }}"
+    enabled: true
+    state: "{{ 'restarted' if fail2banservice.changed or fail2banconfig.changed else 'started' }}"

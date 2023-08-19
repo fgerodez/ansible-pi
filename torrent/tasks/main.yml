@@ -34,6 +34,47 @@
     owner: "{{ userns_root_uid|int + transmission_uid }}"
     group: "{{ userns_root_uid|int + transmission_uid }}"
 
+- name: Set transmission config
+  become: true
+  ansible.builtin.lineinfile: 
+    dest: "{{ torrent_vol_base }}/transmission/settings.json"
+    line: "{{ item }}"
+    create: true
+    mode: "0600"
+    owner: "{{ userns_root_uid|int + transmission_uid }}"
+    group: "{{ userns_root_uid|int + transmission_uid }}"
+  with_items:
+    - '{'
+    - '"rpc-whitelist-enabled": false,'
+    - '"rpc-password": "{{ transmission_rpc_password }}",'
+    - '"rpc-username": "{{ transmission_rpc_username }}",'
+    - '"rpc-authentication-required": true,'
+    - '"download-dir": "/media/data/downloads",'
+    - '"encryption": 2'
+    - '}'
+
+- name: Add torrent routing table
+  register: routingtable
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/iproute2/rt_tables
+    line: "2 torrent"
+
+- name: Copy route ruleset
+  register: routingrules
+  become: true
+  ansible.builtin.template:
+    src: "./data/torrent/torrent-route.network.j2"
+    dest: "/etc/systemd/network/90-torrent.network"
+    mode: "0644"
+    
+- name: Restart networking
+  become: true
+  ansible.builtin.systemd:
+    name: systemd-networkd.service
+    state: "restarted"
+  when: routingtable.changed or routingrules.changed
+    
 - name: Create transmission container
   become: true
   community.docker.docker_container:

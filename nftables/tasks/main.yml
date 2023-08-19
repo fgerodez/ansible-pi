@@ -1,0 +1,21 @@
+- name: Install system packages
+  become: true
+  apt:
+    pkg:
+      - nftables
+
+- name: Copy nftables ruleset
+  become: true
+  register: nftablesconfig
+  ansible.builtin.template:
+    src: ./data/nftables/nftables.conf.j2
+    dest: /etc/nftables.conf
+    mode: u=rw,g=,o=
+
+- name: Enable nftables service
+  become: true
+  ansible.builtin.systemd:
+    name: nftables.service
+    daemon_reload: "{{ nftablesconfig.changed }}"
+    enabled: true
+    state: "{{ 'restarted' if nftablesconfig.changed else 'started' }}"

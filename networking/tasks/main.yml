@@ -1,0 +1,14 @@
+- name: Copy wired network config
+  become: true
+  register: networkconfig
+  ansible.builtin.template:
+    src: ./data/network/wired.network.j2
+    dest: /etc/systemd/network/15-wired.network
+    mode: '644'
+
+- name: Restart network service
+  become: true
+  ansible.builtin.systemd:
+    name: systemd-networkd.service
+    state: "restarted"
+  when: networkconfig.changed
