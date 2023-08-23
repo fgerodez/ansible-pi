@@ -64,14 +64,14 @@
   register: routingrules
   become: true
   ansible.builtin.template:
-    src: "./data/torrent/torrent-route.network.j2"
-    dest: "/etc/systemd/network/90-torrent.network"
+    src: torrent-route.network.j2
+    dest: "/etc/systemd/network/{{ systemd_network_config }}.network.d/torrent.conf"
     mode: "0644"
     
 - name: Restart networking
   become: true
   ansible.builtin.systemd:
-    name: systemd-networkd.service
+²    name: systemd-networkd.service
     state: "restarted"
   when: routingtable.changed or routingrules.changed
     

@@ -8,7 +8,7 @@
   become: true
   register: nftablesconfig
   ansible.builtin.template:
-    src: ./data/nftables/nftables.conf.j2
+    src: nftables.conf.j2
     dest: /etc/nftables.conf
     mode: u=rw,g=,o=
 

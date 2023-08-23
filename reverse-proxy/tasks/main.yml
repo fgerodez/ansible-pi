@@ -37,7 +37,7 @@
     owner: "{{ userns_root_uid|int + proxy_uid|int }}"
     group: "{{ userns_root_uid|int + proxy_gid|int }}"
   with_fileglob:
-    - "./data/caddy/*"
+    - "*"
     
 - name: Create container
   become: true

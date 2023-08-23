@@ -2,10 +2,17 @@
   become: true
   register: networkconfig
   ansible.builtin.template:
-    src: ./data/network/wired.network.j2
-    dest: /etc/systemd/network/15-wired.network
+    src: wired.network.j2
+    dest: "/etc/systemd/network/{{ systemd_network_config }}.network"
     mode: '644'
 
+- name: Create dropin folder
+  become: true
+  ansible.builtin.file:
+    path: "/etc/systemd/network/{{ systemd_network_config }}.network.d"
+    state: "directory"
+    mode: '755'
+    
 - name: Restart network service
   become: true
   ansible.builtin.systemd:

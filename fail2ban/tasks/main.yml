@@ -8,7 +8,7 @@
   become: true
   register: fail2banconfig
   ansible.builtin.copy:
-    src: "./data/fail2ban/etc/"
+    src: "etc/"
     dest: /etc/fail2ban/
     mode: u=rw,g=r,o=r
 
@@ -16,7 +16,7 @@
   register: fail2banservice
   become: true
   ansible.builtin.copy:
-    src: "./data/fail2ban/override.conf"
+    src: "override.conf"
     dest: /etc/systemd/system/fail2ban.service.d/
     mode: u=rw,g=r,o=r
 

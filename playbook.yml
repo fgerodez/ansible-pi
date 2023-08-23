@@ -1,6 +1,5 @@
 - hosts: vm
   vars:
-    userns_root_uid: 165536
     nextcloud_network: nextcloud
     media_gid: 1500
     torrent_network: transmission
@@ -14,8 +13,8 @@
     - role: nftables
 
     - role: fail2ban
-      
-    - role: docker
+
+    - role: minidlna
       
     - role: nextcloud
       vars:

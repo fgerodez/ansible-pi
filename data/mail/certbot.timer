@@ -1,9 +1,0 @@
-[Unit]
-Description=Certbot renewal job timer
-
-[Timer]
-OnCalendar=Sun *-*-* 00:00:00
-Unit=certbot.service
-
-[Install]
-WantedBy=timers.target

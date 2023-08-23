@@ -1,2 +1,0 @@
-[DEFAULT]
-sshd_backend = systemd

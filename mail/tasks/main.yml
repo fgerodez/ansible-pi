@@ -30,7 +30,7 @@
 - name: Copy ovh api keys
   become: true
   ansible.builtin.copy:
-    src: ./data/mail/ovh.ini
+    src: ovh.ini
     dest: "{{ mail_vol_base }}/ovh.ini"
     mode: "0600"
     owner: "{{ userns_root_uid }}"
@@ -39,7 +39,7 @@
 - name: Copy opendkim key
   become: true
   ansible.builtin.copy:
-    src: ./data/mail/mail.private
+    src: mail.private
     dest: "{{ mail_vol_base }}/"
     mode: "0600"
     owner: "{{ userns_root_uid|int + opendkim_uid }}"
@@ -48,7 +48,7 @@
 - name: Copy mail database
   become: true
   ansible.builtin.copy:
-    src: ./data/mail/mail.sqlite
+    src: mail.sqlite
     dest: "{{ mail_vol_base }}/"
     mode: "0600"
     owner: "{{ userns_root_uid }}"
@@ -101,7 +101,7 @@
 #- name: Regenerate old dhparam
 #  delegate_to: localhost
 #  community.crypto.openssl_dhparam:
-#    path: ./data/mail/dhparam.pem
+#    path: ./files/dhparam.pem
 #    size: "{{ dhparam_size }}"
 #    force: true
 #  when: hostvars[inventory_hostname].dhparam_regen
@@ -109,7 +109,7 @@
 #- name: Copy dhparam
 #  become: true
 #  ansible.builtin.copy:
-#    src: ./data/mail/dhparam.pem
+#    src: dhparam.pem
 #    dest: "{{ mail_vol_base }}/"
 #    mode: "0600"
 #    owner: "{{ userns_root_uid }}"
@@ -119,7 +119,7 @@
 # - name: Remove local dhparam
 #   delegate_to: localhost
 #   ansible.builtin.file:
-#     path: ./data/mail/dhparam.pem
+#     path: ./files/dhparam.pem
 #     state: absent
 #   when: dhparam_regen
 

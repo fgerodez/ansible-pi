@@ -9,7 +9,7 @@
   become: true
   register: wireguardscript
   ansible.builtin.copy:
-    src: ./data/wireguard/mahoneko-wg.sh
+    src: mahoneko-wg.sh
     dest: /usr/local/bin/
     mode: 700
 
@@ -17,7 +17,7 @@
   become: true
   register: wireguardconfig
   ansible.builtin.copy:
-    src: ./data/wireguard/login.conf
+    src: login.conf
     dest: /etc/wireguard/
     mode: u=rw,g=,o=
 
@@ -25,7 +25,7 @@
   become: true
   register: wireguardservice
   ansible.builtin.copy:
-    src: "./data/wireguard/wg-mahoneko.service"
+    src: wg-mahoneko.service
     dest: /etc/systemd/system/
     mode: u=rw,g=r,o=r
     
