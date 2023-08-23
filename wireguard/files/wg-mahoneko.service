@@ -1,0 +1,17 @@
+[Unit]
+Description=Mahoneko Wireguard tunnel
+After=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=notify
+NotifyAccess=main
+WorkingDirectory=/etc/wireguard
+Restart=always
+RestartSec=20
+RuntimeMaxSec=86400
+
+ExecStart=/usr/local/bin/mahoneko-wg.sh UP slovenia
+ExecStop=/usr/local/bin/mahoneko-wg.sh DOWN slovenia

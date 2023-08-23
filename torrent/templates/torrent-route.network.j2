@@ -1,0 +1,12 @@
+[Match]
+Name={{ interface }}
+
+[Route]
+Type=blackhole
+Table=2
+Destination=0.0.0.0/0
+Metric=3
+
+[RoutingPolicyRule]
+IncomingInterface={{ torrent_network }}
+Table=2

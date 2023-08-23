@@ -1,0 +1,48 @@
+- name: Set inotify limit
+  become: true
+  ansible.posix.sysctl:
+    name: fs.inotify.max_user_watches
+    value: "{{ minidlna_inotify_limit }}"
+
+- name: Create config volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ minidlna_vol_base }}"
+    mode: 0700
+    state: directory
+    owner: "{{ userns_root_uid|int + minidlna_uid|int }}"
+    group: "{{ userns_root_uid|int + minidlna_gid|int }}"
+
+- name: Copy minidlna config
+  become: true
+  ansible.builtin.copy:
+    src: "{{ minidlna_conf_file }}"
+    dest: "{{ minidlna_vol_base }}/minidlna.conf"
+    mode: 0600
+    owner: "{{ userns_root_uid|int + minidlna_uid|int }}"
+    group: "{{ userns_root_uid|int + minidlna_gid|int }}"
+
+- name: Create docker network
+  become: true
+  community.docker.docker_network:
+    name: "{{ minidlna_bridge_name }}"
+    driver: macvlan
+    driver_options:
+      com.docker.network.macvlan.parent: "{{ interface }}"    
+
+- name: Create minidlna container
+  become: true
+  community.docker.docker_container:
+    name: "{{ minidlna_container_name }}"
+    image: "{{ minidlna_docker_image }}"
+    restart_policy: always
+    user: "{{ minidlna_uid }}:{{ minidlna_gid }}"
+    pull: true
+    networks:
+      - name: "{{ minidlna_bridge_name }}"
+    state: started
+    cap_drop:
+      all
+    volumes:
+      - "{{ minidlna_vol_base }}/minidlna.conf:/etc/minidlna.conf"
+

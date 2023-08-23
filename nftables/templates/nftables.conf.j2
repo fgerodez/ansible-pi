@@ -1,0 +1,56 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+        chain input {
+			  type filter hook input priority filter; policy drop;
+
+			  # allow established/related connections
+        	  ct state {established, related} accept
+
+        	  # early drop of invalid connections
+        	  ct state invalid drop
+
+        	  # allow from loopback
+        	  iifname lo accept
+
+        	  # allow icmp
+        	  ip protocol icmp accept
+        	  meta l4proto ipv6-icmp accept
+
+        	  # allow ipv4 local peers
+        	  ip saddr {{ local_subnet }} accept
+
+        	  # allow ipv6 link local peers
+        	  ip6 saddr fe80::/10 accept
+
+        	  # allow service ports
+        	  iifname "{{ interface }}" tcp dport { http, https, {{ ssh_port }}, 22, 993, 25, 587, 4190 } accept
+        }
+
+		chain forward {
+              type filter hook forward priority 0;
+
+			  # Deny transmission outside wireguard
+			  iifname "transmission" oifname "transmission" accept
+			  iifname "transmission" oifname != "wg0" drop
+			  iifname "wg0" oifname != "transmission" drop
+        }
+
+		chain output {
+              type filter hook output priority 0;
+        }
+}
+
+table ip mahonat {
+	  	chain prerouting {
+			  type nat hook prerouting priority 0;	
+		}
+
+		chain postrouting {
+			  type nat hook postrouting priority 0;
+		}
+}
+
+include "/etc/nftables/*.nft";

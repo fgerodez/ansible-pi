@@ -1,0 +1,10 @@
+[Unit]
+Description=Nextcloud cron job timer
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=15min
+Unit=nextcloud-cron.service
+
+[Install]
+WantedBy=timers.target

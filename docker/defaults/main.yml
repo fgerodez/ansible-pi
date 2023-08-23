@@ -1,0 +1,2 @@
+userns_root_uid: 165536
+docker_vol_base: /docker
