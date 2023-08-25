@@ -211,8 +211,8 @@
     mode: u=rw,g=r,o=r
     directory_mode: u=rwx,g=rx,o=rx
   loop:
-    - ./data/mail/certbot.service
-    - ./data/mail/certbot.timer
+    - certbot.service
+    - certbot.timer
       
 - name: Enable certbot timer
   become: true

@@ -4,14 +4,14 @@
     pkg:
       - wireguard
       - jq
-
+      
 - name: Copy wireguard script
   become: true
   register: wireguardscript
   ansible.builtin.copy:
     src: mahoneko-wg.sh
     dest: /usr/local/bin/
-    mode: 700
+    mode: 0700
 
 - name: Copy wireguard credentials
   become: true
@@ -19,7 +19,7 @@
   ansible.builtin.copy:
     src: login.conf
     dest: /etc/wireguard/
-    mode: u=rw,g=,o=
+    mode: 0600
 
 - name: Copy systemd service
   become: true
@@ -27,7 +27,7 @@
   ansible.builtin.copy:
     src: wg-mahoneko.service
     dest: /etc/systemd/system/
-    mode: u=rw,g=r,o=r
+    mode: 0644
     
 - name: Enable wireguard service
   become: true

@@ -1,0 +1,6 @@
+- name: Create media volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ media_vol_base }}"
+    mode: 0777
+    state: directory

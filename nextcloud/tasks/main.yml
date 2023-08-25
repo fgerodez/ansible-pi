@@ -6,24 +6,22 @@
     name: "{{ nextcloud_bridge_name }}"
     driver_options:
       com.docker.network.bridge.name: "{{ nextcloud_bridge_name }}"
-
-      
+  
 # Source volume is world readable for the reverse proxy
 - name: Create nextcloud source volume
   become: true
   ansible.builtin.file:
     path: "{{ nextcloud_vol_base }}/src"
-    mode: "0775"
+    mode: 0775
     state: directory
     owner: "{{ userns_root_uid|int + nextcloud_uid|int }}"
     group: "{{ userns_root_uid|int + nextcloud_gid|int }}"
-
-    
+   
 - name: Create nextcloud config and data volumes
   become: true
   ansible.builtin.file:
     path: "{{ item.path }}"
-    mode: "0770"
+    mode: 0770
     state: directory
     owner: "{{ userns_root_uid|int + nextcloud_uid|int }}"
     group: "{{ userns_root_uid|int + nextcloud_gid|int }}"
@@ -31,21 +29,19 @@
     - { path : "{{ nextcloud_vol_base }}/config" }
     - { path : "{{ nextcloud_vol_base }}/data" }
 
-    
 - name: Create mariadb volumes
   become: true
   ansible.builtin.file:
     path: "{{ item.path }}"
-    mode: '0770'
+    mode: 0770
     state: directory
     owner: "{{ userns_root_uid|int + mariadb_uid|int }}"
     group: "{{ userns_root_uid|int + mariadb_gid|int }}"
   loop:
     - { path: "{{ mariadb_vol_base }}/data" }
     - { path: "{{ mariadb_vol_base }}/dumps" }
-    - { path: "{{ mariadb_vol_base }}/config"}
+    - { path: "{{ mariadb_vol_base }}/config" }
 
-    
 - name: Copy mariadb configuration
   become: true
   ansible.builtin.copy:
@@ -74,7 +70,6 @@
       - "{{ nextcloud_vol_base }}/config:/var/www/html/config"
       - "{{ nextcloud_vol_base }}/data:/var/www/html/data"
 
-      
 - name: Mariadb container
   become: true
   no_log: true
@@ -96,22 +91,26 @@
     env:
       MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
 
-      
-- name: Copy nextcloud systemd units
+- name: Copy nextcloud systemd timer
   become: true
+  register: nextcloudTimer
   ansible.builtin.copy:
-    src: "{{ item }}"
+    src: nextcloud-cron.timer
     dest: /etc/systemd/system/
-    mode: u=rw,g=r,o=r
-    directory_mode: u=rwx,g=rx,o=rx
-  loop:
-    - nextcloud-cron.service
-    - nextcloud-cron.timer
-
-    
+    mode: 0644
+    directory_mode: 0755
+      
+- name: Copy nextcloud cron service
+  become: true
+  register: nextcloudService
+  ansible.builtin.template:
+    src: nextcloud-cron.service.j2
+    dest: /etc/systemd/system/nextcloud-cron.service
+    mode: 0644
+          
 - name: Enable nextcloud cron timer
   become: true
   ansible.builtin.systemd:
     name: nextcloud-cron.timer
     enabled: true
-    daemon_reload: true
+    daemon_reload: "{{ nextcloudTimer.changed or nextcloudService.changed }}"

@@ -17,26 +17,13 @@
     - role: minidlna
       
     - role: nextcloud
-      vars:
-        nextcloud_uid: 82
-        nextcloud_gid: 82
-        nextcloud_container_name: "nextcloud"
-        nextcloud_bridge_name: "{{ nextcloud_network }}"
-        nextcloud_vol_base: /docker/nextcloud
-        mariadb_uid: 999
-        mariadb_gid: 999
-        mariadb_root_password: "{{ db_root_password }}"
-        mariadb_vol_base: /docker/mariadb
 
     - role: torrent
-      vars:
-        torrent_vol_base: /docker/media
-        transmission_uid: 2000
-        transmission_container_name: "transmission"
-        transmission_bridge_name: "transmission"
 
     - role: wireguard
-        
+
+    - role: sonarr
+      
     - role: mail
       vars:
         mail_bridge_name: mail

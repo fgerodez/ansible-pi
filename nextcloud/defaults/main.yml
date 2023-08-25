@@ -1,1 +1,10 @@
 mariadb_version: 10.6
+nextcloud_uid: 82
+nextcloud_gid: 82
+nextcloud_container_name: "nextcloud"
+nextcloud_bridge_name: "{{ nextcloud_network }}"
+nextcloud_vol_base: "{{ docker_vol_base }}/nextcloud"
+mariadb_uid: 999
+mariadb_gid: 999
+mariadb_root_password: "{{ db_root_password }}"
+mariadb_vol_base: "{{ docker_vol_base }}/mariadb"

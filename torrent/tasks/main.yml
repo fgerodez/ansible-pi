@@ -1,5 +1,15 @@
----
-# tasks file for torrent
+- name: Set rmem max
+  become: true
+  ansible.posix.sysctl:
+    name: net.core.rmem_max
+    value: "{{ transmission_rmem_max }}"
+
+- name: Set wmem max
+  become: true
+  ansible.posix.sysctl:
+    name: net.core.wmem_max
+    value: "{{ transmission_wmem_max }}"    
+
 - name: Create docker network
   become: true
   community.docker.docker_network:
@@ -7,53 +17,34 @@
     driver_options:
       com.docker.network.bridge.name: "{{ transmission_bridge_name }}"
 
-- name: Create volume base
+- name: Create docker volume
   become: true
   ansible.builtin.file:
-    path: "{{ torrent_vol_base }}"
-    mode: "0770"
+    path: "{{ transmission_vol_base }}"
+    mode: 0700
     state: directory
-    owner: "{{ userns_root_uid }}"
-    group: "{{ userns_root_uid|int + media_gid }}"
-
-- name: Create data folder
-  become: true
-  ansible.builtin.file:
-    path: "{{ torrent_vol_base }}/data"
-    mode: "0770"
-    state: directory
-    owner: "{{ userns_root_uid }}"
-    group: "{{ userns_root_uid|int + media_gid }}"
-
-- name: Create transmission folder
-  become: true
-  ansible.builtin.file:
-    path: "{{ torrent_vol_base }}/transmission"
-    mode: "0700"
-    state: directory
-    owner: "{{ userns_root_uid|int + transmission_uid }}"
-    group: "{{ userns_root_uid|int + transmission_uid }}"
+    owner: "{{ transmission_vol_uid }}"
+    group: "{{ transmission_vol_gid }}"
 
 - name: Set transmission config
   become: true
   ansible.builtin.lineinfile: 
-    dest: "{{ torrent_vol_base }}/transmission/settings.json"
+    dest: "{{ transmission_vol_base }}/settings.json"
     line: "{{ item }}"
     create: true
-    mode: "0600"
-    owner: "{{ userns_root_uid|int + transmission_uid }}"
-    group: "{{ userns_root_uid|int + transmission_uid }}"
+    mode: 0600
+    owner: "{{ transmission_vol_uid }}"
+    group: "{{ transmission_vol_gid }}"
   with_items:
     - '{'
     - '"rpc-whitelist-enabled": false,'
-    - '"rpc-password": "{{ transmission_rpc_password }}",'
-    - '"rpc-username": "{{ transmission_rpc_username }}",'
-    - '"rpc-authentication-required": true,'
-    - '"download-dir": "/media/data/downloads",'
+    - '"rpc-host-whitelist-enable": true,'
+    - '"rpc-host-whitelist": "{{ transmission_hostname }}"'
+    - '"download-dir": "{{ transmission_download_dir }}",'
     - '"encryption": 2'
     - '}'
 
-- name: Add torrent routing table
+- name: Add routing table
   register: routingtable
   become: true
   ansible.builtin.lineinfile:
@@ -64,14 +55,14 @@
   register: routingrules
   become: true
   ansible.builtin.template:
-    src: torrent-route.network.j2
+    src: "{{ transmission_route_template }}"
     dest: "/etc/systemd/network/{{ systemd_network_config }}.network.d/torrent.conf"
-    mode: "0644"
+    mode: 0644
     
 - name: Restart networking
   become: true
   ansible.builtin.systemd:
-²    name: systemd-networkd.service
+    name: systemd-networkd.service
     state: "restarted"
   when: routingtable.changed or routingrules.changed
     
@@ -79,8 +70,8 @@
   become: true
   community.docker.docker_container:
     name: "{{ transmission_container_name }}"
-    image: "mahoneko/transmission:latest"
-    user: "{{ transmission_uid }}:{{ media_gid }}"
+    image: "{{ transmission_docker_image }}"
+    user: "{{ transmission_uid }}:{{ transmission_uid }}"
     restart_policy: always
     state: started
     pull: true
@@ -89,4 +80,7 @@
     cap_drop:
       - all
     volumes:
-      - "{{ torrent_vol_base }}:/media"
+      - "{{ transmission_vol_base }}:{{ transmission_vol_mount_point }}"
+      - "{{ media_vol_base }}:{{ transmission_media_dir }}"
+    env:
+      CONFIG_DIR: "{{ transmission_vol_mount_point }}"
