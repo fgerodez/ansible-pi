@@ -1,0 +1,44 @@
+- name: Create mariadb volumes
+  become: true
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: 0700
+    state: directory
+    owner: "{{ nextcloud_mariadb_vol_uid }}"
+    group: "{{ nextcloud_mariadb_vol_gid }}"
+  loop:
+    - { path: "{{ nextcloud_mariadb_vol_data }}" }
+    - { path: "{{ nextcloud_mariadb_vol_dumps }}" }
+    - { path: "{{ nextcloud_mariadb_vol_config }}" }
+
+- name: Copy mariadb configuration
+  become: true
+  ansible.builtin.copy:
+    src: 99-custom.cnf
+    dest: "{{ nextcloud_mariadb_vol_config }}"
+    mode: 0600
+    owner: "{{ nextcloud_mariadb_vol_uid }}"
+    group: "{{ nextcloud_mariadb_vol_gid }}"
+
+- name: Mariadb container
+  become: true
+  no_log: true
+  community.docker.docker_container:
+    name: "{{ nextcloud_mariadb_docker_container }}"
+    image: "mariadb:{{ nextcloud_mariadb_version }}"
+    user: "{{ nextcloud_mariadb_uid }}:{{ nextcloud_mariadb_gid }}"
+    pull: true
+    restart_policy: always
+    cap_drop:
+      - all
+    networks:
+      - name: "{{ nextcloud_docker_network }}"
+        aliases:
+          - " {{ nextcloud_mariadb_docker_alias }}"
+    state: started
+    volumes:
+      - "{{ nextcloud_mariadb_vol_data }}:/var/lib/mysql"
+      - "{{ nextcloud_mariadb_vol_config }}:/etc/mysql/conf.d/:ro"
+      - "{{ nextcloud_mariadb_vol_dumps }}:/docker-entrypoint-initdb.d:ro"
+    env:
+      MARIADB_ROOT_PASSWORD: "{{ nextcloud_mariadb_root_password }}"

@@ -1,0 +1,9 @@
+prowlarr_bridge_name: prowlarr
+prowlarr_vol_base: "{{ docker_vol_base}}/prowlarr"
+prowlarr_container_name: prowlarr
+prowlarr_docker_image: mahoneko/prowlarr:latest
+prowlarr_user: 999
+prowlarr_group: 999
+prowlarr_uid: "{{ userns_root_uid|int + prowlarr_user|int }}"
+prowlarr_gid: "{{ userns_root_uid|int + prowlarr_group|int }}"
+prowlarr_vol_mount: /var/lib/prowlarr

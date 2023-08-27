@@ -7,4 +7,3 @@ sonarr_docker_image: mahoneko/sonarr:latest
 sonarr_user: sonarr
 sonarr_group: sonarr
 sonarr_vol_mount: /var/lib/sonarr
-sonarr_media_mount: /media

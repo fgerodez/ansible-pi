@@ -1,0 +1,10 @@
+mail_bridge_name: mail
+mail_vol_base: "{{ docker_vol_base }}/mail"
+dhparam_size: 4096
+postfix_container_name: postfix
+opendkim_container_name: opendkim
+opendkim_uid: 100
+opendkim_gid: 100
+dovecot_container_name: dovecot
+dovecot_vmail_uid: 5000
+dovecot_vmail_gid: 5000

@@ -5,4 +5,4 @@ WantedBy= multi-user.target
 Description=Nextcloud cron service
 
 [Service]
-ExecStart=/usr/bin/docker exec {{ nextcloud_container_name }} /usr/local/bin/php -f /var/www/html/cron.php
+ExecStart=/usr/bin/docker exec {{ nextcloud_docker_container }} /usr/local/bin/php -f /var/www/html/cron.php

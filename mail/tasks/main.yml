@@ -4,7 +4,7 @@
   become: true
   ansible.builtin.file:
     path: "{{ mail_vol_base }}"
-    mode: "0700"
+    mode: 0700
     state: directory
     owner: root
     group: root
@@ -13,7 +13,7 @@
   become: true
   ansible.builtin.file:
     path: "{{ mail_vol_base }}/certbot"
-    mode: "0700"
+    mode: 0700
     state: directory
     owner: "{{ userns_root_uid }}"
     group: "{{ userns_root_uid }}"
@@ -22,7 +22,7 @@
   become: true
   ansible.builtin.file:
     path: "{{ mail_vol_base }}/mail"
-    mode: "0700"
+    mode: 0700
     state: directory
     owner: "{{ userns_root_uid|int + dovecot_vmail_uid }}"
     group: "{{ userns_root_uid|int + dovecot_vmail_gid }}"      
@@ -32,7 +32,7 @@
   ansible.builtin.copy:
     src: ovh.ini
     dest: "{{ mail_vol_base }}/ovh.ini"
-    mode: "0600"
+    mode: 0600
     owner: "{{ userns_root_uid }}"
     group: "{{ userns_root_uid }}"
 
@@ -41,7 +41,7 @@
   ansible.builtin.copy:
     src: mail.private
     dest: "{{ mail_vol_base }}/"
-    mode: "0600"
+    mode: 0600
     owner: "{{ userns_root_uid|int + opendkim_uid }}"
     group: "{{ userns_root_uid|int + opendkim_gid }}"
 
@@ -50,7 +50,7 @@
   ansible.builtin.copy:
     src: mail.sqlite
     dest: "{{ mail_vol_base }}/"
-    mode: "0600"
+    mode: 0600
     owner: "{{ userns_root_uid }}"
     group: "{{ userns_root_uid }}"
 

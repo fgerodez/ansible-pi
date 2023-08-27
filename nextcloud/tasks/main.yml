@@ -3,114 +3,22 @@
 - name: Create docker network
   become: true
   community.docker.docker_network:
-    name: "{{ nextcloud_bridge_name }}"
-    driver_options:
-      com.docker.network.bridge.name: "{{ nextcloud_bridge_name }}"
-  
-# Source volume is world readable for the reverse proxy
-- name: Create nextcloud source volume
+    name: "{{ nextcloud_docker_network }}"
+
+- name: Create volume base
   become: true
   ansible.builtin.file:
-    path: "{{ nextcloud_vol_base }}/src"
-    mode: 0775
+    path: "{{ nextcloud_vol_base }}"
     state: directory
-    owner: "{{ userns_root_uid|int + nextcloud_uid|int }}"
-    group: "{{ userns_root_uid|int + nextcloud_gid|int }}"
-   
-- name: Create nextcloud config and data volumes
-  become: true
-  ansible.builtin.file:
-    path: "{{ item.path }}"
-    mode: 0770
-    state: directory
-    owner: "{{ userns_root_uid|int + nextcloud_uid|int }}"
-    group: "{{ userns_root_uid|int + nextcloud_gid|int }}"
-  loop:
-    - { path : "{{ nextcloud_vol_base }}/config" }
-    - { path : "{{ nextcloud_vol_base }}/data" }
-
-- name: Create mariadb volumes
-  become: true
-  ansible.builtin.file:
-    path: "{{ item.path }}"
-    mode: 0770
-    state: directory
-    owner: "{{ userns_root_uid|int + mariadb_uid|int }}"
-    group: "{{ userns_root_uid|int + mariadb_gid|int }}"
-  loop:
-    - { path: "{{ mariadb_vol_base }}/data" }
-    - { path: "{{ mariadb_vol_base }}/dumps" }
-    - { path: "{{ mariadb_vol_base }}/config" }
-
-- name: Copy mariadb configuration
-  become: true
-  ansible.builtin.copy:
-    src: 99-custom.cnf
-    dest: "{{ mariadb_vol_base }}/config"
-    mode: 0600
-    owner: "{{ userns_root_uid|int + mariadb_uid|int }}"
-    group: "{{ userns_root_uid|int + mariadb_gid|int }}"
-
+    mode: 0700
+    owner: root
+    group: root
     
-- name: Nextcloud container
-  become: true
-  community.docker.docker_container:
-    name: "{{ nextcloud_container_name }}"
-    image: "mahoneko/nextcloud:latest"
-    restart_policy: always
-    user: "{{ nextcloud_uid }}:{{ nextcloud_gid }}"
-    pull: true
-    networks:
-      - name: "{{ nextcloud_bridge_name }}"
-    state: started
-    cap_drop:
-      - all
-    volumes:
-      - "{{ nextcloud_vol_base }}/src:/var/www/html"
-      - "{{ nextcloud_vol_base }}/config:/var/www/html/config"
-      - "{{ nextcloud_vol_base }}/data:/var/www/html/data"
+- name: Install nextcloud
+  ansible.builtin.include_tasks: nextcloud.yml
 
-- name: Mariadb container
-  become: true
-  no_log: true
-  community.docker.docker_container:
-    name: mariadb
-    image: "mariadb:{{ mariadb_version }}"
-    user: "{{ mariadb_uid }}:{{ mariadb_gid }}"
-    pull: true
-    restart_policy: always
-    cap_drop:
-      - all
-    networks:
-      - name: "{{ nextcloud_bridge_name }}"
-    state: started
-    volumes:
-      - "{{ mariadb_vol_base }}/data:/var/lib/mysql"
-      - "{{ mariadb_vol_base }}/config:/etc/mysql/conf.d/:ro"
-      - "{{ mariadb_vol_base }}/dumps:/docker-entrypoint-initdb.d:ro"
-    env:
-      MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
-
-- name: Copy nextcloud systemd timer
-  become: true
-  register: nextcloudTimer
-  ansible.builtin.copy:
-    src: nextcloud-cron.timer
-    dest: /etc/systemd/system/
-    mode: 0644
-    directory_mode: 0755
-      
-- name: Copy nextcloud cron service
-  become: true
-  register: nextcloudService
-  ansible.builtin.template:
-    src: nextcloud-cron.service.j2
-    dest: /etc/systemd/system/nextcloud-cron.service
-    mode: 0644
-          
-- name: Enable nextcloud cron timer
-  become: true
-  ansible.builtin.systemd:
-    name: nextcloud-cron.timer
-    enabled: true
-    daemon_reload: "{{ nextcloudTimer.changed or nextcloudService.changed }}"
+- name: Install mariadb
+  ansible.builtin.include_tasks: mariadb.yml
+    
+- name: Install caddy
+  ansible.builtin.include_tasks: caddy.yml

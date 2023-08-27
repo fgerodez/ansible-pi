@@ -1,10 +1,39 @@
-mariadb_version: 10.6
 nextcloud_uid: 82
 nextcloud_gid: 82
-nextcloud_container_name: "nextcloud"
-nextcloud_bridge_name: "{{ nextcloud_network }}"
+nextcloud_docker_container: "nextcloud"
+nextcloud_docker_network: "nextcloud"
+nextcloud_vol_uid: "{{ userns_root_uid|int + nextcloud_uid|int }}"
+nextcloud_vol_gid: "{{ nextcloud_vol_uid }}"
 nextcloud_vol_base: "{{ docker_vol_base }}/nextcloud"
-mariadb_uid: 999
-mariadb_gid: 999
-mariadb_root_password: "{{ db_root_password }}"
-mariadb_vol_base: "{{ docker_vol_base }}/mariadb"
+nextcloud_vol_src: "{{ nextcloud_vol_base}}/src"
+nextcloud_vol_data: "{{ nextcloud_vol_base}}/data"
+nextcloud_vol_config: "{{ nextcloud_vol_base}}/config"
+nextcloud_mount_src: "/var/www/html"
+nextcloud_mount_data: "{{ nextcloud_mount_src}}/data"
+nextcloud_mount_config: "{{ nextcloud_mount_src }}/config"
+
+nextcloud_mariadb_docker_container: "nextcloud_mariadb"
+nextcloud_mariadb_docker_alias: "mariadb"
+nextcloud_mariadb_version: 10.6
+nextcloud_mariadb_uid: 999
+nextcloud_mariadb_gid: 999
+nextcloud_mariadb_root_password: "{{ db_root_password }}"
+nextcloud_mariadb_vol_uid: "{{ userns_root_uid|int + nextcloud_mariadb_uid|int }}"
+nextcloud_mariadb_vol_gid: "{{ nextcloud_mariadb_vol_uid }}"
+nextcloud_mariadb_vol_base: "{{ nextcloud_vol_base }}/mariadb"
+nextcloud_mariadb_vol_data: "{{ nextcloud_mariadb_vol_base }}/data"
+nextcloud_mariadb_vol_config: "{{ nextcloud_mariadb_vol_base}}/config"
+nextcloud_mariadb_vol_dumps: "{{ nextcloud_mariadb_vol_base}}/dumps"
+
+nextcloud_caddy_uid: 1000
+nextcloud_caddy_gid: 1000
+nextcloud_caddy_port: 8080
+nextcloud_caddy_docker_image: caddy
+nextcloud_caddy_docker_container: "nextcloud_caddy"
+nextcloud_caddy_vol_data: "{{ nextcloud_vol_base}}/caddy/data"
+nextcloud_caddy_vol_config: "{{ nextcloud_vol_base }}/caddy/config"
+nextcloud_caddy_vol_uid: "{{ userns_root_uid|int + nextcloud_caddy_uid|int }}"
+nextcloud_caddy_vol_gid: "{{ userns_root_uid|int + nextcloud_caddy_gid|int }}"
+nextcloud_caddy_mount_point: "/nextcloud"
+nextcloud_caddy_mount_data: "/data"
+nextcloud_caddy_mount_config: "/etc/caddy"

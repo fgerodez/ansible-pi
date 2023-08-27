@@ -1,0 +1,9 @@
+radarr_bridge_name: radarr
+radarr_vol_base: "{{ docker_vol_base}}/radarr"
+radarr_uid: "{{ userns_root_uid|int + 999 }}"
+radarr_gid: "{{ userns_root_uid|int + 999 }}"
+radarr_container_name: radarr
+radarr_docker_image: mahoneko/radarr:latest
+radarr_user: radarr
+radarr_group: radarr
+radarr_vol_mount: /var/lib/radarr

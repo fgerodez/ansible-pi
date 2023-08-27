@@ -1,0 +1,37 @@
+- name: Create caddy volumes
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0700
+    owner: "{{ nextcloud_caddy_vol_uid }}"
+    group: "{{ nextcloud_caddy_vol_gid }}"
+  loop:
+    - "{{ nextcloud_caddy_vol_data}}"
+    - "{{ nextcloud_caddy_vol_config }}"
+
+- name: Copy caddy config
+  become: true
+  ansible.builtin.template:
+    src: nextcloud.caddy.j2
+    dest: "{{ nextcloud_caddy_vol_config }}/Caddyfile"
+    
+- name: Create caddy container
+  become: true
+  community.docker.docker_container:
+    name: "{{ nextcloud_caddy_docker_container }}"
+    image: "{{ nextcloud_caddy_docker_image }}"
+    restart_policy: always
+    state: started
+    pull: true
+    cap_drop:
+      - all
+    capabilities:
+      - net_bind_service
+    user: "{{ nextcloud_caddy_uid }}:{{ nextcloud_caddy_gid }}"
+    networks:
+      - name: "{{ nextcloud_docker_network }}"
+    volumes:
+      - "{{ nextcloud_caddy_vol_data }}:{{ nextcloud_caddy_mount_data }}"
+      - "{{ nextcloud_caddy_vol_config }}:{{ nextcloud_caddy_mount_config }}:ro"
+  

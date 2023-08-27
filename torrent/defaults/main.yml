@@ -12,3 +12,4 @@ transmission_media_dir: "/media"
 transmission_rmem_max: 4194304
 transmission_wmem_max: 1048576
 transmission_hostname: 'default.host'
+transmission_network_name: transmission

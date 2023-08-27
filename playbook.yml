@@ -1,8 +1,4 @@
 - hosts: vm
-  vars:
-    nextcloud_network: nextcloud
-    media_gid: 1500
-    torrent_network: transmission
   vars_files:
     - ./external_vars.yml
   roles:
@@ -23,27 +19,13 @@
     - role: wireguard
 
     - role: sonarr
+
+    - role: radarr
+
+    - role: prowlarr
       
     - role: mail
       vars:
-        mail_bridge_name: mail
         mail_hostname: "{{ mail_server_hostname }}"
-        mail_vol_base: /docker/mail
-        dhparam_size: 4096
-        postfix_container_name: postfix
-        opendkim_container_name: opendkim
-        opendkim_uid: 100
-        opendkim_gid: 100
-        dovecot_container_name: dovecot
-        dovecot_vmail_uid: 5000
-        dovecot_vmail_gid: 5000
-        
-    - role: reverse-proxy
-      vars:
-        proxy_uid: 1000
-        proxy_gid: 1000
-        proxy_volumes:
-          - /docker/nextcloud/src:/nextcloud
-        proxy_networks:
-          - name: "{{ nextcloud_network }}"
-          - name: "{{ torrent_network }}"
+
+    - role: caddy

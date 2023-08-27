@@ -14,9 +14,7 @@
   become: true
   community.docker.docker_network:
     name: "{{ transmission_bridge_name }}"
-    driver_options:
-      com.docker.network.bridge.name: "{{ transmission_bridge_name }}"
-
+ 
 - name: Create docker volume
   become: true
   ansible.builtin.file:
@@ -84,3 +82,11 @@
       - "{{ media_vol_base }}:{{ transmission_media_dir }}"
     env:
       CONFIG_DIR: "{{ transmission_vol_mount_point }}"
+
+- name: Add caddy config
+  become: true
+  ansible.builtin.template:
+    src: transmission.caddy.j2
+    dest: "{{ transmission_vol_base }}/transmission.caddy"
+    mode: 0644
+

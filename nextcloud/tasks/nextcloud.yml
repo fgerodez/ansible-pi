@@ -1,0 +1,63 @@
+# Source volume is world readable for the reverse proxy
+- name: Create nextcloud source volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ nextcloud_vol_src }}"
+    mode: 0775
+    state: directory
+    owner: "{{ nextcloud_vol_uid }}"
+    group: "{{ nextcloud_vol_gid }}"
+   
+- name: Create nextcloud config and data volumes
+  become: true
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: 0700
+    state: directory
+    owner: "{{ nextcloud_vol_uid }}"
+    group: "{{ nextcloud_vol_gid }}"
+  loop:
+    - { path : "{{ nextcloud_vol_config }}" }
+    - { path : "{{ nextcloud_vol_data }}" }
+        
+- name: Nextcloud container
+  become: true
+  community.docker.docker_container:
+    name: "{{ nextcloud_docker_container }}"
+    image: "mahoneko/nextcloud:latest"
+    restart_policy: always
+    user: "{{ nextcloud_uid }}:{{ nextcloud_gid }}"
+    pull: true
+    networks:
+      - name: "{{ nextcloud_docker_network }}"
+    state: started
+    cap_drop:
+      - all
+    volumes:
+      - "{{ nextcloud_vol_src }}:{{ nextcloud_mount_src }}"
+      - "{{ nextcloud_vol_config }}:{{ nextcloud_mount_config }}"
+      - "{{ nextcloud_vol_data }}:{{ nextcloud_mount_data }}"
+
+- name: Copy nextcloud systemd timer
+  become: true
+  register: nextcloudTimer
+  ansible.builtin.copy:
+    src: nextcloud-cron.timer
+    dest: /etc/systemd/system/
+    mode: 0644
+    directory_mode: 0755
+      
+- name: Copy nextcloud cron service
+  become: true
+  register: nextcloudService
+  ansible.builtin.template:
+    src: nextcloud-cron.service.j2
+    dest: /etc/systemd/system/nextcloud-cron.service
+    mode: 0644
+          
+- name: Enable nextcloud cron timer
+  become: true
+  ansible.builtin.systemd:
+    name: nextcloud-cron.timer
+    enabled: true
+    daemon_reload: "{{ nextcloudTimer.changed or nextcloudService.changed }}"

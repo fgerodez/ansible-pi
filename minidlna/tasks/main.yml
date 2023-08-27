@@ -45,4 +45,4 @@
       all
     volumes:
       - "{{ minidlna_vol_base }}/minidlna.conf:/etc/minidlna.conf"
-      - "{{ media_vol_base }}:/media"
+      - "{{ media_vol_base }}:{{ media_mount_point }}"

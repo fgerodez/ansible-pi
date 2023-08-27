@@ -2,5 +2,3 @@ dependencies:
   - role: docker
 
   - role: media
-
-  - role: caddy

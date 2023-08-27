@@ -1,30 +1,30 @@
 - name: Create docker network
   become: true
   community.docker.docker_network:
-    name: "{{ sonarr_bridge_name }}"
-   
+    name: "{{ radarr_bridge_name }}"
+
 - name: Create data volume
   become: true
   ansible.builtin.file:
-    path: "{{ sonarr_vol_base }}"
+    path: "{{ radarr_vol_base }}"
     mode: 0700
     state: directory
-    owner: "{{ sonarr_uid }}"
-    group: "{{ sonarr_gid }}"
+    owner: "{{ radarr_uid }}"
+    group: "{{ radarr_gid }}"
 
 - name: Create docker container
   become: true
   community.docker.docker_container:
-    name: "{{ sonarr_container_name }}"
-    image: "{{ sonarr_docker_image }}"
+    name: "{{ radarr_container_name }}"
+    image: "{{ radarr_docker_image }}"
     restart_policy: always
-    user: "{{ sonarr_user }}:{{ sonarr_group }}"
+    user: "{{ radarr_user }}:{{ radarr_group }}"
     pull: true
     networks:
-      - name: "{{ sonarr_bridge_name }}"
+      - name: "{{ radarr_bridge_name }}"
     state: started
     cap_drop:
       - all
     volumes:
-      - "{{ sonarr_vol_base }}:{{ sonarr_vol_mount }}"
+      - "{{ radarr_vol_base }}:{{ radarr_vol_mount }}"
       - "{{ media_vol_base }}:{{ media_mount_point }}"
