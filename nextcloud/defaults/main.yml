@@ -17,7 +17,6 @@ nextcloud_mariadb_docker_alias: "mariadb"
 nextcloud_mariadb_version: 10.6
 nextcloud_mariadb_uid: 999
 nextcloud_mariadb_gid: 999
-nextcloud_mariadb_root_password: "{{ db_root_password }}"
 nextcloud_mariadb_vol_uid: "{{ userns_root_uid|int + nextcloud_mariadb_uid|int }}"
 nextcloud_mariadb_vol_gid: "{{ nextcloud_mariadb_vol_uid }}"
 nextcloud_mariadb_vol_base: "{{ nextcloud_vol_base }}/mariadb"

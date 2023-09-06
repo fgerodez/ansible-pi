@@ -13,7 +13,8 @@
     - role: minidlna
       
     - role: nextcloud
-
+      nextcloud_mariadb_root_password: "{{ db_root_password }}"
+      
     - role: torrent
 
     - role: wireguard
@@ -25,7 +26,16 @@
     - role: prowlarr
       
     - role: mail
-      vars:
-        mail_hostname: "{{ mail_server_hostname }}"
+      mail_hostname: "{{ mail_server_hostname }}"
 
     - role: caddy
+      vars:
+        caddy_proxies:
+          - { hostname: "{{ transmission_hostname }}", target: "{{ transmission_target }}" }
+        caddy_docker_networks:
+          - name: "{{ nextcloud_docker_network }}"
+          - name: "{{ transmission_network_name }}"
+          - name: "{{ radarr_bridge_name }}"
+          - name: "{{ prowlarr_bridge_name }}"
+          - name: "{{ sonarr_bridge_name }}"
+          

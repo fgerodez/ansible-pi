@@ -1,14 +1,11 @@
-- name: Set rmem max
+- name: Set sysctl values
   become: true
   ansible.posix.sysctl:
-    name: net.core.rmem_max
-    value: "{{ transmission_rmem_max }}"
-
-- name: Set wmem max
-  become: true
-  ansible.posix.sysctl:
-    name: net.core.wmem_max
-    value: "{{ transmission_wmem_max }}"    
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+  loop:
+    - { name: net.core.rmem_max, value: "{{ transmission_rmem_max }}" }
+    - { name: net.core.wmem_max, value: "{{ transmission_wmem_max }}" }
 
 - name: Create docker network
   become: true
@@ -82,11 +79,4 @@
       - "{{ media_vol_base }}:{{ transmission_media_dir }}"
     env:
       CONFIG_DIR: "{{ transmission_vol_mount_point }}"
-
-- name: Add caddy config
-  become: true
-  ansible.builtin.template:
-    src: transmission.caddy.j2
-    dest: "{{ transmission_vol_base }}/transmission.caddy"
-    mode: 0644
-
+  

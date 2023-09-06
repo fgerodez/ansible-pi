@@ -1,4 +1,4 @@
-- name: Set inotify limit
+- name: Set sysctl values
   become: true
   ansible.posix.sysctl:
     name: fs.inotify.max_user_watches

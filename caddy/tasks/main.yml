@@ -25,22 +25,32 @@
     owner: "{{ userns_root_uid|int + caddy_uid|int }}"
     group: "{{ userns_root_uid|int + caddy_gid|int }}"
   loop:
-    - "{{ caddy_vol_base }}/data"
-    - "{{ caddy_vol_base }}/etc"
+    - "{{ caddy_vol_data }}"
+    - "{{ caddy_vol_config }}"
 
 - name: Copy config file
   become: true
   ansible.builtin.copy:
     src: Caddyfile
-    dest: "{{ caddy_vol_base }}/etc/"
+    dest: "{{ caddy_vol_config }}"
     mode: 0600
     owner: "{{ userns_root_uid|int + caddy_uid|int }}"
     group: "{{ userns_root_uid|int + caddy_gid|int }}"
 
+- name: Copy reverse proxy configs
+  become: true
+  ansible.builtin.template:
+    src: reverse.caddy.j2
+    dest: "{{ caddy_vol_config}}/{{ item.hostname }}.caddy"
+    mode: 0600
+    owner: "{{ userns_root_uid|int + caddy_uid|int }}"
+    group: "{{ userns_root_uid|int + caddy_gid|int }}"
+  loop: "{{ caddy_proxies }}"
+    
 - name: Create container
   become: true
   community.docker.docker_container:
-    name: "{{ caddy_container_name }}"
+    name: "{{ caddy_docker_container }}"
     image: "{{ caddy_docker_image }}"
     restart_policy: always
     state: started
@@ -55,5 +65,7 @@
       - "[::]:443:8443"
       - "0.0.0.0:80:8080"
       - "0.0.0.0:443:8443"
-    networks: "{{ caddy_docker_networks }}"
-    volumes: "{{ caddy_docker_volumes }}"
+    networks: "{{ caddy_docker_networks + [{ 'name': caddy_network_name }] }}"
+    volumes:
+      - "{{ caddy_vol_data }}:{{ caddy_mount_data }}"
+      - "{{ caddy_vol_config }}:{{ caddy_mount_config }}"

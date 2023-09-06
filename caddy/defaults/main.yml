@@ -1,8 +1,11 @@
-caddy_container_name: caddy
+caddy_docker_container: caddy
+caddy_docker_image: caddy:latest
 caddy_network_name: 00-caddy # Get first name in lexical order for network priority
 caddy_bridge_name: caddy
 caddy_uid: 1000
 caddy_gid: 1000
 caddy_vol_base: "{{ docker_vol_base }}/caddy"
-caddy_docker_image: caddy:latest
-caddy_config_mount_point: "/etc/caddy"
+caddy_vol_config: "{{ caddy_vol_base }}/etc"
+caddy_vol_data: "{{ caddy_vol_base }}/data"
+caddy_mount_data: "/data"
+caddy_mount_config: "/etc/caddy"
