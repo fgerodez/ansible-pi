@@ -1,5 +1,6 @@
 transmission_bridge_name: transmission
 transmission_container_name: transmission
+transmission_container_port: 9091
 transmission_docker_image: mahoneko/transmission:latest
 transmission_uid: 101
 transmission_vol_base: "{{ docker_vol_base }}/transmission"
