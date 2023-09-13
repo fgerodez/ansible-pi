@@ -39,6 +39,7 @@
 
 - name: Copy reverse proxy configs
   become: true
+  no_log: true
   ansible.builtin.template:
     src: reverse.caddy.j2
     dest: "{{ caddy_vol_config}}/{{ item.hostname }}.caddy"

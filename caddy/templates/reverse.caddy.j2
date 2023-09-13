@@ -1,3 +1,9 @@
 {{ item.hostname }} {  
   reverse_proxy {{ item.target }}
+
+  {% if item.secure is defined and item.secure %}
+  basicauth /* {
+    {{ item.user }} {{ item.password }}
+  }
+  {% endif %}
 }
