@@ -4,6 +4,8 @@ caddy_network_name: 00-caddy # Get first name in lexical order for network prior
 caddy_bridge_name: caddy
 caddy_uid: 1000
 caddy_gid: 1000
+caddy_host_uid: "{{ userns_root_uid|int + caddy_uid|int }}"
+caddy_host_gid: "{{ caddy_host_uid }}"
 caddy_vol_base: "{{ docker_vol_base }}/caddy"
 caddy_vol_config: "{{ caddy_vol_base }}/etc"
 caddy_vol_data: "{{ caddy_vol_base }}/data"

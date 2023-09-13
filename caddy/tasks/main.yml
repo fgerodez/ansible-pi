@@ -22,30 +22,32 @@
     path: "{{ item }}"
     mode: 0700
     state: directory
-    owner: "{{ userns_root_uid|int + caddy_uid|int }}"
-    group: "{{ userns_root_uid|int + caddy_gid|int }}"
+    owner: "{{ caddy_host_uid }}"
+    group: "{{ caddy_host_gid }}"
   loop:
     - "{{ caddy_vol_data }}"
     - "{{ caddy_vol_config }}"
 
 - name: Copy config file
   become: true
+  notify: "Restart caddy"
   ansible.builtin.copy:
     src: Caddyfile
     dest: "{{ caddy_vol_config }}"
     mode: 0600
-    owner: "{{ userns_root_uid|int + caddy_uid|int }}"
-    group: "{{ userns_root_uid|int + caddy_gid|int }}"
+    owner: "{{ caddy_host_uid }}"
+    group: "{{ caddy_host_gid }}"
 
 - name: Copy reverse proxy configs
   become: true
+  notify: "Restart caddy"
   no_log: true
   ansible.builtin.template:
     src: reverse.caddy.j2
     dest: "{{ caddy_vol_config}}/{{ item.hostname }}.caddy"
     mode: 0600
-    owner: "{{ userns_root_uid|int + caddy_uid|int }}"
-    group: "{{ userns_root_uid|int + caddy_gid|int }}"
+    owner: "{{ caddy_host_uid }}"
+    group: "{{ caddy_host_gid }}"
   loop: "{{ caddy_proxies }}"
     
 - name: Create container
