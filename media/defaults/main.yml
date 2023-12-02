@@ -1,2 +1,2 @@
-media_vol_base: "/media/data/docker/media"
-media_mount_point: "/media"
+media_vol_base: "/media/data/docker/files"
+media_mount_point: "/files"

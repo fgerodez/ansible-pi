@@ -15,8 +15,8 @@
 
 - name: Copy minidlna config
   become: true
-  ansible.builtin.copy:
-    src: "{{ minidlna_conf_file }}"
+  ansible.builtin.template:
+    src: "minidlna.conf.j2"
     dest: "{{ minidlna_vol_base }}/minidlna.conf"
     mode: 0600
     owner: "{{ userns_root_uid|int + minidlna_uid|int }}"

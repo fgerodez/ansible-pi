@@ -23,9 +23,9 @@
 #   * "P" for pictures (eg. media_dir=P,/var/lib/minidlna/pictures)
 #   * "V" for video    (eg. media_dir=V,/var/lib/minidlna/videos)
 #   * "PV" for pictures and video (eg. media_dir=PV,/var/lib/minidlna/digital_camera)
-media_dir=V,/media/downloads
-media_dir=V,/media/shows
-media_dir=V,/media/movies
+media_dir=V,{{ media_mount_point }}/downloads
+media_dir=V,{{ media_mount_point }}/shows
+media_dir=V,{{ media_mount_point }}/movies
 
 # Set this to merge all media_dir base contents into the root container
 # (The default is no.)
