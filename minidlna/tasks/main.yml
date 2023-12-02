@@ -27,9 +27,13 @@
   community.docker.docker_network:
     name: "{{ minidlna_bridge_name }}"
     driver: macvlan
+    ipam_config:
+      - subnet: "{{ minidlna_local_subnet }}"
+        gateway: "{{ minidlna_local_gateway }}"
     driver_options:
-      com.docker.network.macvlan.parent: "{{ interface }}"    
-
+      macvlan_mode: bridge
+      parent: "{{ interface }}"
+      
 - name: Create minidlna container
   become: true
   community.docker.docker_container:
@@ -38,6 +42,7 @@
     restart_policy: always
     user: "{{ minidlna_uid }}:{{ minidlna_gid }}"
     pull: true
+    mac_address: "{{ minidlna_mac_address }}"
     networks:
       - name: "{{ minidlna_bridge_name }}"
     state: started

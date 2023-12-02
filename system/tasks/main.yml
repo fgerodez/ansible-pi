@@ -8,12 +8,9 @@
   become: true
   apt:
     pkg:
-      - doas
       - e2fsprogs
       - dphys-swapfile
       - vim-tiny
-      - apparmor
-      - apparmor-utils
 
 - name: Copy boot configuration
   become: true

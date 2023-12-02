@@ -4,8 +4,12 @@
   become: true
   community.docker.docker_network:
     name: "{{ caddy_network_name }}"
+    enable_ipv6: yes
+    ipam_config:
+      - subnet: "{{ caddy_network_ipv6_subnet }}"
     driver_options:
       com.docker.network.bridge.name: "{{ caddy_bridge_name }}"
+      com.docker.network.bridge.inhibit_ipv4: "true"
 
 - name: Create volume base
   become: true
@@ -41,7 +45,6 @@
 - name: Copy reverse proxy configs
   become: true
   notify: "Restart caddy"
-  no_log: true
   ansible.builtin.template:
     src: reverse.caddy.j2
     dest: "{{ caddy_vol_config}}/{{ item.hostname }}.caddy"
@@ -63,12 +66,9 @@
     capabilities:
       - net_bind_service
     user: "{{ caddy_uid }}:{{ caddy_gid }}"
-    ports:
-      - "[::]:80:8080"
-      - "[::]:443:8443"
-      - "0.0.0.0:80:8080"
-      - "0.0.0.0:443:8443"
-    networks: "{{ caddy_docker_networks + [{ 'name': caddy_network_name }] }}"
+    networks:
+      - name: "{{ caddy_network_name }}"
+        ipv6_address: "{{ caddy_ipv6_address }}"
     volumes:
       - "{{ caddy_vol_data }}:{{ caddy_mount_data }}"
       - "{{ caddy_vol_config }}:{{ caddy_mount_config }}"

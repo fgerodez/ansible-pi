@@ -1,2 +1,6 @@
 /inventory.yml
 /external_vars.yml
+/mail/files/mail.private
+/mail/files/mail.sqlite
+/mail/files/ovh.ini
+/wireguard/files/login.conf

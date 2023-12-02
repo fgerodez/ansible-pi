@@ -1,24 +1,27 @@
-- hosts: vm
+- hosts: pi
   vars_files:
     - ./external_vars.yml
   roles:
-    - role: system
+    # - role: system
 
-    - role: networking
+    # - role: networking
       
     - role: nftables
 
-    - role: fail2ban
+    # - role: fail2ban
 
     - role: minidlna
-      
-    - role: nextcloud
       vars:
-        nextcloud_mariadb_root_password: "{{ db_root_password }}"
+        minidlna_local_subnet: "{{ local_subnet }}"
+        minidlna_local_gateway: "{{ local_gateway }}"
       
-    - role: torrent
+    # - role: nextcloud
+    #  vars:
+    #    nextcloud_mariadb_root_password: "{{ db_root_password }}"
+      
+    # - role: torrent
 
-    - role: wireguard
+    # - role: wireguard
 
     - role: sonarr
 
@@ -26,11 +29,11 @@
 
     - role: prowlarr
       
-    - role: mail
-      vars:
-        mail_hostname: "{{ mail_server_hostname }}"
+    # - role: mail
+    #   vars:
+    #     mail_hostname: "{{ mail_server_hostname }}"
 
-    - role: caddy
-      vars:
-        caddy_proxies: "{{ proxies_list }}"
-        caddy_docker_networks: "{{ proxies_networks }}"
+    #- role: caddy
+    #  vars:
+    #    caddy_proxies:
+    #        - { hostname: "{{ prowlarr_hostname }}", target: "{{ prowlarr_target }}"}

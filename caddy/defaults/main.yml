@@ -1,6 +1,6 @@
 caddy_docker_container: caddy
 caddy_docker_image: caddy:latest
-caddy_network_name: 00-caddy # Get first name in lexical order for network priority
+caddy_network_name: caddy 
 caddy_bridge_name: caddy
 caddy_uid: 1000
 caddy_gid: 1000

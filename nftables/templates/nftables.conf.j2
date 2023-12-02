@@ -2,55 +2,70 @@
 
 flush ruleset
 
+table ip nat {
+    chain postrouting {
+        type nat hook postrouting priority 0;
+
+        # Source nat php for the god damn ipv4
+        iifname "php-fpm" oifname "{{ interface }}" counter masquerade
+        iifname "radarr" oifname "{{ interface }}" counter masquerade
+		iifname "sonarr" oifname "{{ interface }}" counter masquerade
+		iifname "prowlarr" oifname "{{ interface }}" counter masquerade
+    }
+}
+
 table inet filter {
-        chain input {
-			  type filter hook input priority filter; policy drop;
+    chain input {
+        type filter hook input priority 0; policy drop
 
-			  # allow established/related connections
-        	  ct state {established, related} accept
+        # allow established/related connections
+        ct state {established, related} accept
 
-        	  # early drop of invalid connections
-        	  ct state invalid drop
+        # early drop of invalid connections
+        ct state invalid drop
 
-        	  # allow from loopback
-        	  iifname lo accept
+        # allow from loopback
+        iifname lo accept
 
-        	  # allow icmp
-        	  ip protocol icmp accept
-        	  meta l4proto ipv6-icmp accept
+        # allow icmp and local ipv4
+        ip protocol icmp accept
+        ip saddr {{ local_subnet }} accept
 
-        	  # allow ipv4 local peers
-        	  ip saddr {{ local_subnet }} accept
+        # allow ipv6 local peers
+        ip6 saddr fe80::/10 accept
 
-        	  # allow ipv6 link local peers
-        	  ip6 saddr fe80::/10 accept
+		# allow icmpv6 (Neighbor Discovery ND)
+	    meta l4proto ipv6-icmp accept
 
-        	  # allow service ports
-        	  iifname "{{ interface }}" tcp dport { http, https, {{ ssh_port }}, 22, 993, 25, 587, 4190 } accept
-        }
+        # allow smtp on ipv4/6 
+        tcp dport { http, https, 25, 587, 993, 4190 } accept
 
-		chain forward {
-              type filter hook forward priority 0;
+		# allow other services on ipv6 only
+        meta nfproto ipv6 tcp dport { {{ ssh_port }} } accept
+    }
 
-			  # Deny transmission outside wireguard
-			  iifname "transmission" oifname "transmission" accept
-			  iifname "transmission" oifname != "wg0" drop
-			  iifname "wg0" oifname != "transmission" drop
-        }
+    chain forward {
+        type filter hook forward priority 0; policy drop
 
-		chain output {
-              type filter hook output priority 0;
-        }
+        # allow established connections
+        ct state {related,established} accept
+
+        # allow php to talk to mysql
+        iifname "php-fpm" oifname "mysql" accept
+
+        # allow php internet access
+        iifname "php-fpm" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
+
+		# allow sonarr internet access
+		meta nfproto ipv6 iifname "radarr" oif "{{ interface }}" counter accept
+		iifname "radarr" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
+
+		# allow sonarr internet access
+		meta nfproto ipv6 iifname "sonarr" oif "{{ interface }}" counter accept
+		iifname "sonarr" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
+
+		# allow prowlarr internet access
+		meta nfproto ipv6 iifname "prowlarr" oif "{{ interface }}" counter accept
+		iifname "prowlarr" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
+    }
 }
-
-table ip mahonat {
-	  	chain prerouting {
-			  type nat hook prerouting priority 0;	
-		}
-
-		chain postrouting {
-			  type nat hook postrouting priority 0;
-		}
-}
-
-include "/etc/nftables/*.nft";

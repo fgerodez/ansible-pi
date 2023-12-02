@@ -2,6 +2,12 @@
   become: true
   community.docker.docker_network:
     name: "{{ sonarr_bridge_name }}"
+    enable_ipv6: yes
+    ipam_config:
+      - subnet: "{{ sonarr_network_ipv6_subnet }}"
+      - subnet: "{{ sonarr_network_subnet }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ sonarr_bridge_name }}"
    
 - name: Create data volume
   become: true
@@ -22,6 +28,8 @@
     pull: true
     networks:
       - name: "{{ sonarr_bridge_name }}"
+        ipv6_address: "{{ sonarr_ipv6_address }}"
+        ipv4_address: "{{ sonarr_ip_address }}"
     state: started
     cap_drop:
       - all

@@ -2,6 +2,11 @@
   become: true
   community.docker.docker_network:
     name: "{{ prowlarr_bridge_name }}"
+    enable_ipv6: yes
+    ipam_config:
+      - subnet: "{{ prowlarr_network_ipv6_subnet }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ prowlarr_bridge_name }}"
 
 - name: Create data volume
   become: true
@@ -21,7 +26,8 @@
     user: "{{ prowlarr_user }}:{{ prowlarr_group }}"
     pull: true
     networks:
-      - name: "{{ prowlarr_bridge_name }}"
+      - name: "{{ prowlarr_bridge_name }}"  
+        ipv6_address: "{{ prowlarr_ipv6_address }}"
     state: started
     cap_drop:
       - all

@@ -2,6 +2,11 @@
   become: true
   community.docker.docker_network:
     name: "{{ radarr_bridge_name }}"
+    enable_ipv6: yes
+    ipam_config:
+      - subnet: "{{ radarr_network_ipv6_subnet }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ radarr_bridge_name }}"
 
 - name: Create data volume
   become: true
@@ -22,6 +27,7 @@
     pull: true
     networks:
       - name: "{{ radarr_bridge_name }}"
+        ipv6_address: "{{ radarr_ipv6_address }}"
     state: started
     cap_drop:
       - all
