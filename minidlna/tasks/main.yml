@@ -32,7 +32,7 @@
         gateway: "{{ minidlna_local_gateway }}"
     driver_options:
       macvlan_mode: bridge
-      parent: "{{ interface }}"
+      parent: "{{ minidlna_macvlan_parent }}"
       
 - name: Create minidlna container
   become: true

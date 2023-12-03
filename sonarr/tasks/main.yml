@@ -29,7 +29,7 @@
     networks:
       - name: "{{ sonarr_bridge_name }}"
         ipv6_address: "{{ sonarr_ipv6_address }}"
-        ipv4_address: "{{ sonarr_ip_address }}"
+        ipv4_address: "{{ sonarr_ipv4_address }}"
     state: started
     cap_drop:
       - all

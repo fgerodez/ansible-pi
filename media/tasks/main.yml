@@ -2,5 +2,5 @@
   become: true
   ansible.builtin.file:
     path: "{{ media_vol_base }}"
-    mode: 0777
+    mode: 0755
     state: directory
