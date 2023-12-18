@@ -4,8 +4,12 @@
   become: true
   community.docker.docker_network:
     name: "{{ nextcloud_docker_network }}"
+    enable_ipv6: yes
+    ipam_config:
+      - subnet: "{{ nextcloud_network_ipv6_subnet }}"
     driver_options:
       com.docker.network.bridge.name: "{{ nextcloud_docker_network }}"
+      com.docker.network.bridge.inhibit_ipv4: "true"
 
 - name: Create volume base
   become: true
@@ -15,12 +19,12 @@
     mode: 0700
     owner: root
     group: root
+
+- name: Install caddy
+  ansible.builtin.include_tasks: caddy.yml
     
 - name: Install nextcloud
   ansible.builtin.include_tasks: nextcloud.yml
 
 - name: Install mariadb
   ansible.builtin.include_tasks: mariadb.yml
-    
-- name: Install caddy
-  ansible.builtin.include_tasks: caddy.yml

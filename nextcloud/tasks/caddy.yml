@@ -31,6 +31,7 @@
     user: "{{ nextcloud_caddy_uid }}:{{ nextcloud_caddy_gid }}"
     networks:
       - name: "{{ nextcloud_docker_network }}"
+        ipv6_address: "{{ nextcloud_ipv6_address }}"
     volumes:
       - "{{ nextcloud_vol_src}}:{{ nextcloud_caddy_mount_point }}"
       - "{{ nextcloud_caddy_vol_data }}:{{ nextcloud_caddy_mount_data }}"

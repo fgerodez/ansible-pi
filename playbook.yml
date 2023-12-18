@@ -20,6 +20,8 @@
     - role: nextcloud
       vars:
         nextcloud_mariadb_root_password: "{{ db_root_password }}"
+        nextcloud_network_ipv6_subnet: "{{ service_nextcloud_network_ipv6_subnet }}"
+        nextcloud_ipv6_address: "{{ service_nextcloud_ipv6_address }}"
       
     # - role: torrent
 
