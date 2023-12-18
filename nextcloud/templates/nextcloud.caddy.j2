@@ -3,11 +3,12 @@
 	admin off
 }
 
-0.0.0.0 {
+:8080 {
       root * {{ nextcloud_caddy_mount_point }}
 
-  	  php_fastcgi {{ nextcloud_docker_container }}:9000 {
+      php_fastcgi {{ nextcloud_docker_container }}:9000 {
         root {{ nextcloud_mount_src }}
+		header_up Host {{ nextcloud_hostname }}
 	  }
 
  	  file_server

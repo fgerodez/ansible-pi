@@ -4,6 +4,8 @@
   become: true
   community.docker.docker_network:
     name: "{{ nextcloud_docker_network }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ nextcloud_docker_network }}"
 
 - name: Create volume base
   become: true

@@ -32,6 +32,7 @@
     networks:
       - name: "{{ nextcloud_docker_network }}"
     volumes:
+      - "{{ nextcloud_vol_src}}:{{ nextcloud_caddy_mount_point }}"
       - "{{ nextcloud_caddy_vol_data }}:{{ nextcloud_caddy_mount_data }}"
       - "{{ nextcloud_caddy_vol_config }}:{{ nextcloud_caddy_mount_config }}:ro"
   

@@ -11,6 +11,7 @@ table ip nat {
         iifname "radarr" oifname "{{ interface }}" counter masquerade
 		iifname "sonarr" oifname "{{ interface }}" counter masquerade
 		iifname "prowlarr" oifname "{{ interface }}" counter masquerade
+		iifname "nextcloud" oifname "{{ interface }}" counter masquerade
     }
 }
 
@@ -67,5 +68,9 @@ table inet filter {
 		# allow prowlarr internet access
 		meta nfproto ipv6 iifname "prowlarr" oif "{{ interface }}" counter accept
 		iifname "prowlarr" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
+
+		# allow nextcloud internet access
+		meta nfproto ipv6 iifname "nextcloud" oif "{{ interface }}" counter accept
+		iifname "nextcloud" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
     }
 }
