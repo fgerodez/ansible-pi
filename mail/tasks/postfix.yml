@@ -34,17 +34,10 @@
       - chown
       - fowner
       - dac_override
-    ports:
-      - "[::]:25:2525"
-      - "[::]:587:25587"
-      - "0.0.0.0:25:2525"
-      - "0.0.0.0:587:25587"
     networks:
       - name: "{{ mail_bridge_name }}"
-    env:
-      HOSTNAME: "{{ mail_hostname }}"
-      SSL_CERT_PUBLIC: "/etc/letsencrypt/live/{{ mail_hostname }}/fullchain.pem"
-      SSL_CERT_PRIVATE: "/etc/letsencrypt/live/{{ mail_hostname }}/privkey.pem"
+        ipv4_address: "{{ mail_postfix_ipv4_address }}"
+        ipv6_address: "{{ mail_postfix_ipv6_address }}"
     volumes:
       - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
       - "{{ postfix_vol_path}}/aliases.cf:{{ postfix_config_mount_path }}/aliases.cf"

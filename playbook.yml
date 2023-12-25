@@ -46,7 +46,14 @@
       
     - role: mail
       vars:
+        mail_domain: "{{ mail_server_domain }}"
         mail_hostname: "{{ mail_server_hostname }}"
+        mail_ipv4_subnet: "{{ service_mail_ipv4_subnet }}"
+        mail_ipv6_subnet: "{{ service_mail_ipv6_subnet }}"
+        mail_dovecot_ipv4_address: "{{ service_mail_dovecot_ipv4_address }}"
+        mail_dovecot_ipv6_address: "{{ service_mail_dovecot_ipv6_address }}"
+        mail_postfix_ipv4_address: "{{ service_mail_postfix_ipv4_address }}"
+        mail_postfix_ipv6_address: "{{ service_mail_postfix_ipv6_address }}"
 
     #- role: caddy
     #  vars:

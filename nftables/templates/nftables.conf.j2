@@ -4,11 +4,38 @@ flush ruleset
 
 table ip nat {
     chain postrouting {
-        type nat hook postrouting priority 0;
+        type nat hook postrouting priority srcnat;
 
         iifname "radarr" oifname "{{ interface }}" counter masquerade
 		iifname "sonarr" oifname "{{ interface }}" counter masquerade
 		iifname "prowlarr" oifname "{{ interface }}" counter masquerade
+		iifname "mail" oifname "{{ interface }}" counter masquerade
+    }
+
+    chain prerouting {
+		type nat hook prerouting priority dstnat;
+
+		# Transfer traffic to postfix
+		iifname "{{ interface }}" tcp dport 25 dnat to {{ service_mail_postfix_ipv4_address }}:2525
+		iifname "{{ interface }}" tcp dport 587 dnat to {{ service_mail_postfix_ipv4_address }}:25587
+
+		# Transfer traffic to dovecot
+		iifname "{{ interface }}" tcp dport 4190 dnat to {{ service_mail_dovecot_ipv4_address }}
+		iifname "{{ interface }}" tcp dport 993 dnat to {{ service_mail_dovecot_ipv4_address }}:10993
+    }
+}
+
+table ip6 nat {
+    chain prerouting {
+		type nat hook prerouting priority dstnat;
+
+		# Transfer traffic to postfix
+		iifname "{{ interface }}" tcp dport 25 dnat to [{{ service_mail_postfix_ipv6_address }}]:2525
+		iifname "{{ interface }}" tcp dport 587 dnat to [{{ service_mail_postfix_ipv6_address }}]:25587
+
+		# Transfer traffic to dovecot
+		iifname "{{ interface }}" tcp dport 4190 dnat to [{{ service_mail_dovecot_ipv6_address }}]
+		iifname "{{ interface }}" tcp dport 993 dnat to [{{ service_mail_dovecot_ipv6_address }}]:10993
     }
 }
 
@@ -45,6 +72,9 @@ table inet filter {
     chain forward {
         type filter hook forward priority 0; policy drop
 
+		# allow dnat connections
+		ct status dnat accept
+
         # allow established connections
         ct state {related,established} accept
 
@@ -62,5 +92,8 @@ table inet filter {
 
 		# allow nextcloud internet access
 		meta nfproto ipv6 iifname "nextcloud" oif "{{ interface }}" counter accept
+
+		# allow mail internet access
+		iifname "mail" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
     }
 }

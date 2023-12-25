@@ -1,9 +1,11 @@
 mynetworks = 127.0.0.0/8 [::1]/128 [fe80::]/64
 
+myhostname = {{ mail_hostname }}
+
 alias_database = 
 alias_maps = 
 
-compatibility_level = 3.5
+compatibility_level = 3.6
 
 biff = no
 readme_directory = no
@@ -17,6 +19,8 @@ smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
 smtpd_tls_exclude_ciphers = MD5, DES, 3DES, RC4, EXPORT, MEDIUM, LOW
 smtpd_tls_dh1024_param_file = {{ postfix_dhparam_path }}
 smtpd_tls_loglevel = 1
+smtpd_tls_cert_file=/etc/letsencrypt/live/{{ mail_hostname }}/fullchain.pem
+smtpd_tls_key_file=/etc/letsencrypt/live/{{ mail_hostname }}/privkey.pem
 
 smtpd_helo_required = yes
 

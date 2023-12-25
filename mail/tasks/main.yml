@@ -4,6 +4,10 @@
   become: true
   community.docker.docker_network:
     name: "{{ mail_bridge_name }}"
+    enable_ipv6: true
+    ipam_config:
+        - subnet: "{{ mail_ipv4_subnet }}"
+        - subnet: "{{ mail_ipv6_subnet }}"
     driver_options:
       com.docker.network.bridge.name: "{{ mail_bridge_name }}"
       
@@ -34,8 +38,8 @@
 - name: Install postfix
   ansible.builtin.include_tasks: postfix.yml
 
-- name: Install opendkim
-  ansible.builtin.include_tasks: opendkim.yml
-
 - name: Install dovecot
   ansible.builtin.include_tasks: dovecot.yml
+
+- name: Install opendkim
+  ansible.builtin.include_tasks: opendkim.yml

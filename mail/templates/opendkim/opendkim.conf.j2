@@ -14,7 +14,7 @@ LogWhy          yes
 
 # Sign for example.com with key in /etc/dkimkeys/dkim.key using
 # selector '2007' (e.g. 2007._domainkey.example.com)
-Domain			{{ mail_hostname }}
+Domain			{{ mail_domain }}
 KeyFile		    {{ opendkim_vol_mount_path }}/mail.private
 Selector		{{ opendkim_mail_selector }}
 

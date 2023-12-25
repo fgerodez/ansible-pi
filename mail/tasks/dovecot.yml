@@ -53,15 +53,10 @@
       - fowner
       - dac_override
       - kill
-    ports:
-      - "[::]:4190:4190"
-      - "[::]:993:{{ dovecot_imaps_port }}"
-      - "0.0.0.0:4190:4190"
-      - "0.0.0.0:993:{{ dovecot_imaps_port }}"
     networks:
       - name: "{{ mail_bridge_name }}"
-    env:
-      HOSTNAME: "{{ mail_hostname }}"
+        ipv4_address: "{{ mail_dovecot_ipv4_address }}"
+        ipv6_address: "{{ mail_dovecot_ipv6_address }}"
     volumes:
       - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
       - "{{ dovecot_vol_mail_path }}:{{ dovecot_mail_path }}"
