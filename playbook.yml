@@ -10,39 +10,39 @@
 
     # - role: fail2ban
 
-    # - role: minidlna
-    #   vars:
-    #     minidlna_local_subnet: "{{ local_subnet }}"
-    #     minidlna_local_gateway: "{{ local_gateway }}"
-    #     minidlna_macvlan_parent: "{{ interface }}"
-    #     minidlna_mac_address: "{{ service_minidlna_mac_address }}"
+    - role: minidlna
+      vars:
+        minidlna_local_subnet: "{{ local_subnet }}"
+        minidlna_local_gateway: "{{ local_gateway }}"
+        minidlna_macvlan_parent: "{{ interface }}"
+        minidlna_mac_address: "{{ service_minidlna_mac_address }}"
       
-    # - role: nextcloud
-    #   vars:
-    #     nextcloud_mariadb_root_password: "{{ db_root_password }}"
-    #     nextcloud_network_ipv6_subnet: "{{ service_nextcloud_network_ipv6_subnet }}"
-    #     nextcloud_ipv6_address: "{{ service_nextcloud_ipv6_address }}"
+    - role: nextcloud
+      vars:
+        nextcloud_mariadb_root_password: "{{ db_root_password }}"
+        nextcloud_network_ipv6_subnet: "{{ service_nextcloud_network_ipv6_subnet }}"
+        nextcloud_ipv6_address: "{{ service_nextcloud_ipv6_address }}"
       
     # - role: torrent
 
     # - role: wireguard
 
-    # - role: sonarr
-    #   vars:
-    #     sonarr_ipv6_address: "{{ service_sonarr_ipv6_address }}"
-    #     sonarr_ipv4_address: "{{ service_sonarr_ipv4_address }}"
-    #     sonarr_network_ipv6_subnet: "{{ service_sonarr_network_ipv6_subnet }}"
-    #     sonarr_network_subnet: "{{ service_sonarr_network_subnet }}"
+    - role: sonarr
+      vars:
+        sonarr_ipv6_address: "{{ service_sonarr_ipv6_address }}"
+        sonarr_ipv4_address: "{{ service_sonarr_ipv4_address }}"
+        sonarr_network_ipv6_subnet: "{{ service_sonarr_network_ipv6_subnet }}"
+        sonarr_network_subnet: "{{ service_sonarr_network_subnet }}"
 
-    # - role: radarr
-    #   vars:
-    #     radarr_network_ipv6_subnet: "{{ service_radarr_network_ipv6_subnet }}"
-    #     radarr_ipv6_address: "{{ service_radarr_ipv6_address }}"
+    - role: radarr
+      vars:
+        radarr_network_ipv6_subnet: "{{ service_radarr_network_ipv6_subnet }}"
+        radarr_ipv6_address: "{{ service_radarr_ipv6_address }}"
 
-    # - role: prowlarr
-    #   vars:
-    #     prowlarr_network_ipv6_subnet: "{{ service_prowlarr_network_ipv6_subnet }}"
-    #     prowlarr_ipv6_address: "{{ service_prowlarr_ipv6_address }}"
+    - role: prowlarr
+      vars:
+        prowlarr_network_ipv6_subnet: "{{ service_prowlarr_network_ipv6_subnet }}"
+        prowlarr_ipv6_address: "{{ service_prowlarr_ipv6_address }}"
       
     - role: mail
       vars:

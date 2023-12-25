@@ -3,4 +3,5 @@
 /mail/files/mail.private
 /mail/files/mail.sqlite
 /mail/files/ovh.ini
+/mail/files/dhparam.pem
 /wireguard/files/login.conf
