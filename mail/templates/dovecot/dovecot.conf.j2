@@ -1,0 +1,98 @@
+## Dovecot configuration file
+
+# If you're in a hurry, see http://wiki2.dovecot.org/QuickConfiguration
+
+# "doveconf -n" command gives a clean output of the changed settings. Use it
+# instead of copy&pasting files when posting to the Dovecot mailing list.
+
+# Enable installed protocols
+protocols = imap lmtp sieve
+
+# A comma separated list of IPs or hosts where to listen in for connections. 
+# "*" listens in all IPv4 interfaces, "::" listens in all IPv6 interfaces.
+# If you want to specify non-default ports or anything more complex,
+# edit conf.d/master.conf.
+listen = *, ::
+
+# Configuration SSL
+ssl = required
+ssl_min_protocol = TLSv1.2
+ssl_cipher_list = ALL:!DH:!kRSA:!SRP:!kDHd:!DSS:!aNULL:!eNULL:!EXPORT:!DES:!3DES:!MD5:!PSK:!RC4:!ADH:!LOW@STRENGTH
+ssl_dh=</etc/dovecot/dhparam.pem
+
+disable_plaintext_auth=yes
+
+mail_home = /var/mail/%d/%n
+mail_location = maildir:~/mail
+mail_uid = {{ dovecot_vmail_uid }}
+mail_gid = {{ dovecot_vmail_gid }}
+
+# Configuration des utilisateurs
+userdb {
+  driver = static
+}
+
+passdb {
+  driver = sql
+  args = /etc/dovecot/dovecot-sql.conf.ext    
+}
+
+# Configuration IMAP
+#
+# Désactive imap sans ssl
+service imap-login { 
+  inet_listener imap { 
+    port=0 
+  }
+
+  inet_listener imaps {
+    port = {{ dovecot_imaps_port }}
+  }
+}
+
+# Configuration SASL
+#
+service auth {
+  inet_listener sasl {
+    port={{ dovecot_sasl_port }}
+  }
+}
+
+# Configuration LMTP
+#
+# Tranfert de mail de postfix à dovecot
+protocol lmtp {
+  postmaster_address = postmaster@%d 
+  mail_plugins = $mail_plugins sieve
+}
+
+service lmtp {
+  inet_listener lmtp {
+  	port={{ dovecot_lmtp_port }}
+  }
+}
+
+# Disable useless chroots for containers
+service anvil {
+  chroot = 
+}
+
+service imap-login {
+  chroot = 
+}
+
+# Configuration plugin sieve
+plugin {
+  # The path to the user's main active script. If ManageSieve is used, this the
+  # location of the symbolic link controlled by ManageSieve.
+  sieve = /var/mail/%d/%n/.dovecot.sieve
+
+  # Directory for :personal include scripts for the include extension. This
+  # is also where the ManageSieve service stores the user's scripts.
+  sieve_dir = /var/mail/%d/%n/sieve
+}
+
+# Log everything to stdout
+log_path=/dev/stdout
+info_log_path=/dev/stdout
+debug_log_path=/dev/stdout

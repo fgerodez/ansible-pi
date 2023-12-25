@@ -10,18 +10,18 @@
 
     # - role: fail2ban
 
-    - role: minidlna
-      vars:
-        minidlna_local_subnet: "{{ local_subnet }}"
-        minidlna_local_gateway: "{{ local_gateway }}"
-        minidlna_macvlan_parent: "{{ interface }}"
-        minidlna_mac_address: "{{ service_minidlna_mac_address }}"
+    # - role: minidlna
+    #   vars:
+    #     minidlna_local_subnet: "{{ local_subnet }}"
+    #     minidlna_local_gateway: "{{ local_gateway }}"
+    #     minidlna_macvlan_parent: "{{ interface }}"
+    #     minidlna_mac_address: "{{ service_minidlna_mac_address }}"
       
-    - role: nextcloud
-      vars:
-        nextcloud_mariadb_root_password: "{{ db_root_password }}"
-        nextcloud_network_ipv6_subnet: "{{ service_nextcloud_network_ipv6_subnet }}"
-        nextcloud_ipv6_address: "{{ service_nextcloud_ipv6_address }}"
+    # - role: nextcloud
+    #   vars:
+    #     nextcloud_mariadb_root_password: "{{ db_root_password }}"
+    #     nextcloud_network_ipv6_subnet: "{{ service_nextcloud_network_ipv6_subnet }}"
+    #     nextcloud_ipv6_address: "{{ service_nextcloud_ipv6_address }}"
       
     # - role: torrent
 
@@ -44,9 +44,9 @@
     #     prowlarr_network_ipv6_subnet: "{{ service_prowlarr_network_ipv6_subnet }}"
     #     prowlarr_ipv6_address: "{{ service_prowlarr_ipv6_address }}"
       
-    # - role: mail
-    #   vars:
-    #     mail_hostname: "{{ mail_server_hostname }}"
+    - role: mail
+      vars:
+        mail_hostname: "{{ mail_server_hostname }}"
 
     #- role: caddy
     #  vars:

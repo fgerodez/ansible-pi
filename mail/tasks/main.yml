@@ -1,222 +1,41 @@
 ---
 # tasks file for mail
-- name: Create volume base
-  become: true
-  ansible.builtin.file:
-    path: "{{ mail_vol_base }}"
-    mode: 0700
-    state: directory
-    owner: root
-    group: root
-
-- name: Create certbot volume
-  become: true
-  ansible.builtin.file:
-    path: "{{ mail_vol_base }}/certbot"
-    mode: 0700
-    state: directory
-    owner: "{{ userns_root_uid }}"
-    group: "{{ userns_root_uid }}"
-
-- name: Create dovecot mail volume
-  become: true
-  ansible.builtin.file:
-    path: "{{ mail_vol_base }}/mail"
-    mode: 0700
-    state: directory
-    owner: "{{ userns_root_uid|int + dovecot_vmail_uid }}"
-    group: "{{ userns_root_uid|int + dovecot_vmail_gid }}"      
-    
-- name: Copy ovh api keys
-  become: true
-  ansible.builtin.copy:
-    src: ovh.ini
-    dest: "{{ mail_vol_base }}/ovh.ini"
-    mode: 0600
-    owner: "{{ userns_root_uid }}"
-    group: "{{ userns_root_uid }}"
-
-- name: Copy opendkim key
-  become: true
-  ansible.builtin.copy:
-    src: mail.private
-    dest: "{{ mail_vol_base }}/"
-    mode: 0600
-    owner: "{{ userns_root_uid|int + opendkim_uid }}"
-    group: "{{ userns_root_uid|int + opendkim_gid }}"
-
-- name: Copy mail database
-  become: true
-  ansible.builtin.copy:
-    src: mail.sqlite
-    dest: "{{ mail_vol_base }}/"
-    mode: 0600
-    owner: "{{ userns_root_uid }}"
-    group: "{{ userns_root_uid }}"
-
-- name: Check certificate existence
-  become: true
-  ansible.builtin.stat:
-    path: "{{ mail_vol_base }}/certbot/live/{{ mail_hostname }}"
-  register: certFolder
-    
-- name: Initialize ssl certificate
-  become: true
-  community.docker.docker_container:
-    name: certbot
-    detach: false
-    cleanup: yes
-    image: certbot/dns-ovh
-    command: "certonly \
-    --dns-ovh \
-    --dns-ovh-credentials /etc/letsencrypt/ovh.ini \
-    --dns-ovh-propagation-seconds 60 \
-    --non-interactive \
-    --agree-tos \
-    --email {{ mail_owner_email }} \
-    --domains {{ mail_hostname }}"
-    volumes:
-      - "{{ mail_vol_base }}/certbot:/etc/letsencrypt"
-      - "{{ mail_vol_base }}/ovh.ini:/etc/letsencrypt/ovh.ini:ro"
-  when: not certFolder.stat.exists
-
 - name: Create docker network
   become: true
   community.docker.docker_network:
     name: "{{ mail_bridge_name }}"
     driver_options:
       com.docker.network.bridge.name: "{{ mail_bridge_name }}"
-
-- name: Check dhparam last update
+      
+- name: Create volume base
   become: true
-  ansible.builtin.stat:
-    path: "{{ mail_vol_base }}/dhparam.pem"
-  register: dhparam
-
-- name: Should regenerate dhparam older than 7 days
-  ansible.builtin.set_fact:
-    dhparam_regen: "{{ not dhparam.stat.exists or \
-    ansible_date_time.epoch|float - dhparam.stat.mtime > 604800 }}"
-
-- name: Regenerate old dhparam
-  delegate_to: localhost
-  community.crypto.openssl_dhparam:
-    path: ./files/dhparam.pem
-    size: "{{ dhparam_size }}"
-    force: true
-  when: hostvars[inventory_hostname].dhparam_regen
-
-- name: Copy dhparam
- become: true
- ansible.builtin.copy:
-   src: dhparam.pem
-   dest: "{{ mail_vol_base }}/"
-   mode: "0600"
-   owner: "{{ userns_root_uid }}"
-   group: "{{ userns_root_uid }}"
- when: dhparam_regen
-
-- name: Remove local dhparam
-  delegate_to: localhost
   ansible.builtin.file:
-    path: ./files/dhparam.pem
-    state: absent
-  when: dhparam_regen
+    path: "{{ mail_vol_base }}"
+    mode: '700'
+    state: directory
+    owner: root
+    group: root
 
-- name: Opendkim container
-  become: true
-  community.docker.docker_container:
-    name: "{{ opendkim_container_name }}"
-    image: "mahoneko/opendkim:latest"
-    restart_policy: always
-    state: started
-    pull: true
-    user: "{{ opendkim_uid }}:{{ opendkim_gid }}"
-    cap_drop:
-      - all
-    networks:
-      - name: "{{ mail_bridge_name }}"
-    volumes:
-      - "{{ mail_vol_base }}/mail.private:/etc/opendkim/mail.private:ro"
-    
-- name: Postfix container
-  become: true
-  community.docker.docker_container:
-    name: "{{ postfix_container_name }}"
-    image: "mahoneko/postfix:latest"
-    restart_policy: always
-    state: started
-    pull: true
-    cap_drop:
-      - all
-    capabilities:
-      - setgid
-      - setuid
-      - chown
-      - fowner
-      - dac_override
-    ports:
-      - "[::]:25:2525"
-      - "[::]:587:25587"
-      - "0.0.0.0:25:2525"
-      - "0.0.0.0:587:25587"
-    networks:
-      - name: "{{ mail_bridge_name }}"
-    env:
-      HOSTNAME: "{{ mail_hostname }}"
-      SSL_CERT_PUBLIC: "/etc/letsencrypt/live/{{ mail_hostname }}/fullchain.pem"
-      SSL_CERT_PRIVATE: "/etc/letsencrypt/live/{{ mail_hostname }}/privkey.pem"
-    volumes:
-      - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
-      - "{{ mail_vol_base }}/dhparam.pem:/etc/postfix/dhparam.pem:ro"
-      - "{{ mail_vol_base }}/mail.sqlite:/etc/postfix/mail.sqlite:ro"
-
-- name: Dovecot container
-  become: true
-  community.docker.docker_container:
-    name: "{{ dovecot_container_name }}"
-    image: "mahoneko/dovecot:latest"
-    restart_policy: always
-    state: started
-    pull: true
-    cap_drop:
-      - all
-    capabilities:
-      - setgid
-      - setuid
-      - chown
-      - fowner
-      - dac_override
-      - kill
-    ports:
-      - "[::]:4190:4190"
-      - "[::]:993:10993"
-      - "0.0.0.0:4190:4190"
-      - "0.0.0.0:993:10993"
-    networks:
-      - name: "{{ mail_bridge_name }}"
-    env:
-      HOSTNAME: "{{ mail_hostname }}"
-    volumes:
-      - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
-      - "{{ mail_vol_base }}/dhparam.pem:/etc/dovecot/dhparam.pem:ro"
-      - "{{ mail_vol_base }}/mail.sqlite:/etc/dovecot/mail.sqlite:ro"
-      - "{{ mail_vol_base}}/mail:/var/mail"
-
-- name: Copy certbot systemd units
+- name: Copy mail database
   become: true
   ansible.builtin.copy:
-    src: "{{ item }}"
-    dest: /etc/systemd/system/
-    mode: u=rw,g=r,o=r
-    directory_mode: u=rwx,g=rx,o=rx
-  loop:
-    - certbot.service
-    - certbot.timer
-      
-- name: Enable certbot timer
-  become: true
-  ansible.builtin.systemd:
-    name: certbot.timer
-    enabled: true
-    daemon_reload: true
+    src: mail.sqlite
+    dest: "{{ mail_vol_base }}/"
+    mode: '600'
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+
+- name: Install certbot
+  ansible.builtin.include_tasks: certbot.yml
+
+- name: Install dhparam
+  ansible.builtin.include_tasks: dhparam.yml
+
+- name: Install postfix
+  ansible.builtin.include_tasks: postfix.yml
+
+- name: Install opendkim
+  ansible.builtin.include_tasks: opendkim.yml
+
+- name: Install dovecot
+  ansible.builtin.include_tasks: dovecot.yml

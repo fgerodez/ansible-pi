@@ -1,10 +1,31 @@
 mail_bridge_name: mail
 mail_vol_base: "{{ docker_vol_base }}/mail"
 dhparam_size: 4096
+
+postfix_vol_path: "{{ mail_vol_base }}/postfix"
 postfix_container_name: postfix
+postfix_config_mount_path: /etc/postfix
+postfix_mail_db_path: "{{ postfix_config_mount_path }}/mail.sqlite"
+postfix_dhparam_path: "{{ postfix_config_mount_path }}/dhparam.pem"
+
+opendkim_docker_image: mahoneko/opendkim:latest
+opendkim_vol_path: "{{ mail_vol_base }}/opendkim"
+opendkim_vol_mount_path: "/etc/opendkim"
 opendkim_container_name: opendkim
+opendkim_mail_selector: mail
 opendkim_uid: 100
 opendkim_gid: 100
+opendkim_port: 8891
+
+dovecot_docker_image: mahoneko/dovecot:latest
+dovecot_vol_path: "{{ mail_vol_base }}/dovecot"
+dovecot_vol_mail_path: "{{ dovecot_vol_path }}/mail"
+dovecot_vol_config_path: "{{ dovecot_vol_path }}/config"
+dovecot_config_mount_path: /etc/dovecot
+dovecot_mail_path: /var/mail
 dovecot_container_name: dovecot
 dovecot_vmail_uid: 5000
 dovecot_vmail_gid: 5000
+dovecot_imaps_port: 10993
+dovecot_sasl_port: 9998
+dovecot_lmtp_port: 9999

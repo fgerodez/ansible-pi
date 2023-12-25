@@ -1,0 +1,6 @@
+#
+# Config file to list existing virtual domains
+#
+dbpath = {{ postfix_mail_db_path }}
+
+query = select 1 from virtual_domains where name='%s' 

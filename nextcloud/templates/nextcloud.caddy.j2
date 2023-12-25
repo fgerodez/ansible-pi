@@ -8,14 +8,13 @@
 
       php_fastcgi {{ nextcloud_docker_container }}:9000 {
         root {{ nextcloud_mount_src }}
+		
 		header_up Host {{ nextcloud_hostname }}
+		header_up X-Real-IP {header.X-Real-IP}
+        header_up X-Forwarded-For {header.X-Forwarded-For}
 	  }
 
  	  file_server
-
-	  header {
-	    Strict-Transport-Security max-age=31536000;
-	  }
 
 	  redir /.well-known/carddav /remote.php/dav 301
 	  redir /.well-known/caldav /remote.php/dav 301

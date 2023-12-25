@@ -1,0 +1,57 @@
+- name: Create postfix volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ postfix_vol_path }}"
+    mode: "700"
+    state: directory
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+    
+- name: Copy postfix config
+  become: true
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ postfix_vol_path }}/{{ item | basename | replace('.j2', '') }}"
+    mode: "600"
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+  with_fileglob:
+    - "../templates/postfix/*.j2"
+
+- name: Postfix container
+  become: true
+  community.docker.docker_container:
+    name: "{{ postfix_container_name }}"
+    image: "mahoneko/postfix:latest"
+    restart_policy: always
+    state: started
+    pull: true
+    cap_drop:
+      - all
+    capabilities:
+      - setgid
+      - setuid
+      - chown
+      - fowner
+      - dac_override
+    ports:
+      - "[::]:25:2525"
+      - "[::]:587:25587"
+      - "0.0.0.0:25:2525"
+      - "0.0.0.0:587:25587"
+    networks:
+      - name: "{{ mail_bridge_name }}"
+    env:
+      HOSTNAME: "{{ mail_hostname }}"
+      SSL_CERT_PUBLIC: "/etc/letsencrypt/live/{{ mail_hostname }}/fullchain.pem"
+      SSL_CERT_PRIVATE: "/etc/letsencrypt/live/{{ mail_hostname }}/privkey.pem"
+    volumes:
+      - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
+      - "{{ postfix_vol_path}}/aliases.cf:{{ postfix_config_mount_path }}/aliases.cf"
+      - "{{ postfix_vol_path}}/main.cf:{{ postfix_config_mount_path }}/main.cf"
+      - "{{ postfix_vol_path}}/master.cf:{{ postfix_config_mount_path }}/master.cf"
+      - "{{ postfix_vol_path}}/virtual-mailbox-domains.cf:{{ postfix_config_mount_path }}/virtual-mailbox-domains.cf"
+      - "{{ postfix_vol_path}}/maps.cf:{{ postfix_config_mount_path }}/maps.cf"
+      - "{{ mail_vol_base }}/dhparam.pem:{{ postfix_config_mount_path }}/dhparam.pem:ro"
+      - "{{ mail_vol_base }}/mail.sqlite:{{ postfix_config_mount_path }}/mail.sqlite:ro"
+

@@ -1,0 +1,34 @@
+- name: Check dhparam last update
+  become: true
+  ansible.builtin.stat:
+    path: "{{ mail_vol_base }}/dhparam.pem"
+  register: dhparam
+
+# - name: Should regenerate dhparam older than 7 days
+#   ansible.builtin.set_fact:
+#     dhparam_regen: "{{ not dhparam.stat.exists or \
+#     ansible_date_time.epoch|float - dhparam.stat.mtime > 604800 }}"
+
+# - name: Regenerate old dhparam
+#   delegate_to: localhost
+#   community.crypto.openssl_dhparam:
+#     path: ./files/dhparam.pem
+#     size: "{{ dhparam_size }}"
+#     force: true
+#   when: hostvars[inventory_hostname].dhparam_regen
+
+- name: Copy dhparam
+  become: true
+  ansible.builtin.copy:
+    src: dhparam.pem
+    dest: "{{ mail_vol_base }}/"
+    mode: "0600"
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+
+# - name: Remove local dhparam
+#   delegate_to: localhost
+#   ansible.builtin.file:
+#     path: ./files/dhparam.pem
+#     state: absent
+#   when: dhparam_regen

@@ -1,0 +1,6 @@
+#
+# Config file for cleanup(8) virtual_alias lookups
+#
+dbpath = {{ postfix_mail_db_path }}
+
+query = select target from virtual_aliases where alias='%s' and active = 1

@@ -1,0 +1,42 @@
+- name: Create opendkim volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ opendkim_vol_path }}"
+    mode: '700'
+    state: directory
+    owner: "{{ userns_root_uid|int + opendkim_uid }}"
+    group: "{{ userns_root_uid|int + opendkim_gid }}"
+
+- name: Copy opendkim key
+  become: true
+  ansible.builtin.copy:
+    src: mail.private
+    dest: "{{ opendkim_vol_path }}/"
+    mode: '600'
+    owner: "{{ userns_root_uid|int + opendkim_uid }}"
+    group: "{{ userns_root_uid|int + opendkim_gid }}"
+
+- name: Copy opendkim config
+  become: true
+  ansible.builtin.template:
+    src: opendkim/opendkim.conf.j2
+    dest: "{{ opendkim_vol_path }}/opendkim.conf"
+    mode: '600'
+    owner: "{{ userns_root_uid|int + opendkim_uid }}"
+    group: "{{ userns_root_uid|int + opendkim_gid }}"
+
+- name: Opendkim container
+  become: true
+  community.docker.docker_container:
+    name: "{{ opendkim_container_name }}"
+    image: "{{ opendkim_docker_image }}"
+    restart_policy: always
+    state: started
+    pull: true
+    user: "{{ opendkim_uid }}:{{ opendkim_gid }}"
+    cap_drop:
+      - all
+    networks:
+      - name: "{{ mail_bridge_name }}"
+    volumes:
+      - "{{ opendkim_vol_path }}:{{ opendkim_vol_mount_path }}:ro"

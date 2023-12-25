@@ -6,12 +6,9 @@ table ip nat {
     chain postrouting {
         type nat hook postrouting priority 0;
 
-        # Source nat php for the god damn ipv4
-        iifname "php-fpm" oifname "{{ interface }}" counter masquerade
         iifname "radarr" oifname "{{ interface }}" counter masquerade
 		iifname "sonarr" oifname "{{ interface }}" counter masquerade
 		iifname "prowlarr" oifname "{{ interface }}" counter masquerade
-		iifname "nextcloud" oifname "{{ interface }}" counter masquerade
     }
 }
 
@@ -51,12 +48,6 @@ table inet filter {
         # allow established connections
         ct state {related,established} accept
 
-        # allow php to talk to mysql
-        iifname "php-fpm" oifname "mysql" accept
-
-        # allow php internet access
-        iifname "php-fpm" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
-
 		# allow sonarr internet access
 		meta nfproto ipv6 iifname "radarr" oif "{{ interface }}" counter accept
 		iifname "radarr" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
@@ -71,6 +62,5 @@ table inet filter {
 
 		# allow nextcloud internet access
 		meta nfproto ipv6 iifname "nextcloud" oif "{{ interface }}" counter accept
-		iifname "nextcloud" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
     }
 }

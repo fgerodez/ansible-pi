@@ -1,0 +1,71 @@
+- name: Create dovecot volume base
+  become: true
+  ansible.builtin.file:
+    path: "{{ dovecot_vol_path }}"
+    mode: '700'
+    state: directory
+    owner: root
+    group: root
+
+- name: Create dovecot config volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ dovecot_vol_config_path }}"
+    mode: '700'
+    state: directory
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+
+- name: Create dovecot mail volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ dovecot_vol_mail_path }}"
+    mode: '700'
+    state: directory
+    owner: "{{ userns_root_uid|int + dovecot_vmail_uid }}"
+    group: "{{ userns_root_uid|int + dovecot_vmail_gid }}"
+
+- name: Copy dovecot config
+  become: true
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ dovecot_vol_config_path }}/{{ item | basename | replace('.j2', '') }}"
+    mode: "600"
+    owner: "{{ userns_root_uid }}"
+    group: "{{ userns_root_uid }}"
+  with_fileglob:
+    - "../templates/dovecot/*.j2"
+
+- name: Create Dovecot container
+  become: true
+  community.docker.docker_container:
+    name: "{{ dovecot_container_name }}"
+    image: "{{ dovecot_docker_image }}"
+    restart_policy: always
+    state: started
+    pull: true
+    cap_drop:
+      - all
+    capabilities:
+      - setgid
+      - setuid
+      - chown
+      - fowner
+      - dac_override
+      - kill
+    ports:
+      - "[::]:4190:4190"
+      - "[::]:993:{{ dovecot_imaps_port }}"
+      - "0.0.0.0:4190:4190"
+      - "0.0.0.0:993:{{ dovecot_imaps_port }}"
+    networks:
+      - name: "{{ mail_bridge_name }}"
+    env:
+      HOSTNAME: "{{ mail_hostname }}"
+    volumes:
+      - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
+      - "{{ dovecot_vol_mail_path }}:{{ dovecot_mail_path }}"
+      - "{{ dovecot_vol_config_path }}:{{ dovecot_config_mount_path }}"
+      - "{{ mail_vol_base }}/dhparam.pem:{{ dovecot_config_mount_path }}/dhparam.pem:ro"
+      - "{{ mail_vol_base }}/mail.sqlite:{{ dovecot_config_mount_path }}/mail.sqlite:ro"
+

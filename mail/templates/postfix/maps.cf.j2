@@ -1,0 +1,6 @@
+#
+# Config file for cleanup(8) virtual_alias lookups
+#
+dbpath = {{ postfix_mail_db_path }}
+
+query = select * from virtual_users join virtual_domains on domain_id = virtual_domains.id where username='%u' and name='%d'
