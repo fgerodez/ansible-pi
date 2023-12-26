@@ -4,7 +4,7 @@
   roles:
     # - role: system
 
-    # - role: networking
+    - role: networking
       
     - role: nftables
 
@@ -23,9 +23,10 @@
         nextcloud_network_ipv6_subnet: "{{ service_nextcloud_network_ipv6_subnet }}"
         nextcloud_ipv6_address: "{{ service_nextcloud_ipv6_address }}"
       
-    # - role: torrent
-
-    # - role: wireguard
+    - role: torrent
+      vars:
+        transmission_network_subnet: "{{ service_transmission_ipv4_subnet }}"
+        transmission_network_ipv4_address: "{{ service_transmission_ipv4_address }}"
 
     - role: sonarr
       vars:
@@ -34,10 +35,10 @@
         sonarr_network_ipv6_subnet: "{{ service_sonarr_network_ipv6_subnet }}"
         sonarr_network_subnet: "{{ service_sonarr_network_subnet }}"
 
-    - role: radarr
-      vars:
-        radarr_network_ipv6_subnet: "{{ service_radarr_network_ipv6_subnet }}"
-        radarr_ipv6_address: "{{ service_radarr_ipv6_address }}"
+    # - role: radarr
+    #   vars:
+    #     radarr_network_ipv6_subnet: "{{ service_radarr_network_ipv6_subnet }}"
+    #     radarr_ipv6_address: "{{ service_radarr_ipv6_address }}"
 
     - role: prowlarr
       vars:

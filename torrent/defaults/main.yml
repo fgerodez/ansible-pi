@@ -1,6 +1,5 @@
 transmission_bridge_name: transmission
 transmission_container_name: transmission
-transmission_container_port: 9091
 transmission_docker_image: mahoneko/transmission:latest
 transmission_uid: 101
 transmission_vol_base: "{{ docker_vol_base }}/transmission"
@@ -8,8 +7,8 @@ transmission_vol_uid: "{{ userns_root_uid|int + transmission_uid }}"
 transmission_vol_gid: "{{ transmission_vol_uid }}"
 transmission_vol_mount_point: /transmission
 transmission_route_template: "torrent-route.network.j2"
-transmission_download_dir: "/media/downloads"
-transmission_media_dir: "/media"
+transmission_download_dir: "{{media_mount_point}}/downloads"
 transmission_rmem_max: 4194304
 transmission_wmem_max: 1048576
 transmission_network_name: transmission
+transmission_wg_interface: wg0

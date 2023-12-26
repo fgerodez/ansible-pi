@@ -2,98 +2,102 @@
 
 flush ruleset
 
-table ip nat {
-    chain postrouting {
-        type nat hook postrouting priority srcnat;
-
-        iifname "radarr" oifname "{{ interface }}" counter masquerade
-		iifname "sonarr" oifname "{{ interface }}" counter masquerade
-		iifname "prowlarr" oifname "{{ interface }}" counter masquerade
-		iifname "mail" oifname "{{ interface }}" counter masquerade
-    }
-
-    chain prerouting {
-		type nat hook prerouting priority dstnat;
-
-		# Transfer traffic to postfix
-		iifname "{{ interface }}" tcp dport 25 dnat to {{ service_mail_postfix_ipv4_address }}:2525
-		iifname "{{ interface }}" tcp dport 587 dnat to {{ service_mail_postfix_ipv4_address }}:25587
-
-		# Transfer traffic to dovecot
-		iifname "{{ interface }}" tcp dport 4190 dnat to {{ service_mail_dovecot_ipv4_address }}
-		iifname "{{ interface }}" tcp dport 993 dnat to {{ service_mail_dovecot_ipv4_address }}:10993
-    }
+# set of interfaces with masquerated ipv4 traffic
+define MASQUERADE = {
+    "radarr",
+	"sonarr",
+	"prowlarr",
+	"mail",
+	"{{ service_transmission_network }}"
 }
 
-table ip6 nat {
-    chain prerouting {
-		type nat hook prerouting priority dstnat;
-
-		# Transfer traffic to postfix
-		iifname "{{ interface }}" tcp dport 25 dnat to [{{ service_mail_postfix_ipv6_address }}]:2525
-		iifname "{{ interface }}" tcp dport 587 dnat to [{{ service_mail_postfix_ipv6_address }}]:25587
-
-		# Transfer traffic to dovecot
-		iifname "{{ interface }}" tcp dport 4190 dnat to [{{ service_mail_dovecot_ipv6_address }}]
-		iifname "{{ interface }}" tcp dport 993 dnat to [{{ service_mail_dovecot_ipv6_address }}]:10993
-    }
+# set of interfaces with forwarded traffic
+define FORWARD = {
+    "radarr",
+	"sonarr",
+	"prowlarr",
+	"mail",
+	"nextcloud"
 }
 
 table inet filter {
+    chain postrouting {
+        type nat hook postrouting priority srcnat;
+
+		# masquerades ipv4 outgoing traffic
+        meta nfproto ipv4 iif $MASQUERADE masquerade
+    }
+
+	chain prerouting {
+		type nat hook prerouting priority dstnat;
+
+		# transfers traffic to postfix for port 25 ipv4 and ipv6
+		ip daddr {{ local_ip }} tcp dport 25 dnat to {{ service_mail_postfix_ipv4_address }}:2525
+		ip6 daddr {{ local_ipv6 }} tcp dport 25 dnat to [{{ service_mail_postfix_ipv6_address }}]:2525
+
+		# transfers traffic to postfix for port 587 ipv4 and ipv6
+		ip daddr {{ local_ip }} tcp dport 587 dnat to {{ service_mail_postfix_ipv4_address }}:25587
+		ip6 daddr {{ local_ipv6 }} tcp dport 587 dnat to [{{ service_mail_postfix_ipv6_address }}]:25587
+
+		# transfers traffic to dovecot for port 4190
+		ip daddr {{ local_ip }} tcp dport 4190 dnat to {{ service_mail_dovecot_ipv4_address }}
+		ip6 daddr {{ local_ipv6 }} tcp dport 4190 dnat to {{ service_mail_dovecot_ipv6_address }}
+
+		# transfers traffic to dovecot for port 993
+		ip daddr {{ local_ip }} tcp dport 993 dnat to {{ service_mail_dovecot_ipv4_address }}:10993
+		ip6 daddr {{ local_ipv6 }} tcp dport 993 dnat to [{{ service_mail_dovecot_ipv6_address }}]:10993
+
+		# transfers wireguard incoming traffic to transmission container
+		# uses iifname instead of iff here because the wireguard interface can be recreated frequently.
+		meta nfproto ipv4 iifname "{{ service_transmission_wg_interface }}" dnat to {{ service_transmission_ipv4_address }}
+    }
+
     chain input {
         type filter hook input priority 0; policy drop
 
-        # allow established/related connections
+        # allows established/related connections
         ct state {established, related} accept
 
-        # early drop of invalid connections
+        # drops invalid connections
         ct state invalid drop
 
-        # allow from loopback
-        iifname lo accept
+        # allows loopback
+        iif lo accept
 
-        # allow icmp and local ipv4
+        # allows icmp and local ipv4
         ip protocol icmp accept
         ip saddr {{ local_subnet }} accept
 
-        # allow ipv6 local peers
+        # allows ipv6 local peers
         ip6 saddr fe80::/10 accept
 
-		# allow icmpv6 (Neighbor Discovery ND)
+		# allows icmpv6 (Neighbor Discovery ND)
 	    meta l4proto ipv6-icmp accept
 
-        # allow smtp on ipv4/6 
-        tcp dport { http, https, 25, 587, 993, 4190 } accept
+        # allows http(s) on ipv4/6 
+        tcp dport { http, https } accept
 
-		# allow other services on ipv6 only
+		# allows ssh on ipv6 only
         meta nfproto ipv6 tcp dport { {{ ssh_port }} } accept
     }
 
     chain forward {
         type filter hook forward priority 0; policy drop
 
-		# allow dnat connections
+		# allows dnat connections
 		ct status dnat accept
 
-        # allow established connections
+        # allows established connections
         ct state {related,established} accept
 
-		# allow sonarr internet access
-		meta nfproto ipv6 iifname "radarr" oif "{{ interface }}" counter accept
-		iifname "radarr" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
+		# disables forwarding to local ipv4 network
+		ip daddr {{ local_subnet }} drop
 
-		# allow sonarr internet access
-		meta nfproto ipv6 iifname "sonarr" oif "{{ interface }}" counter accept
-		iifname "sonarr" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
+		# allows internet access for all interfaces in the set
+		iif $FORWARD oif "{{ interface }}" accept
 
-		# allow prowlarr internet access
-		meta nfproto ipv6 iifname "prowlarr" oif "{{ interface }}" counter accept
-		iifname "prowlarr" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
-
-		# allow nextcloud internet access
-		meta nfproto ipv6 iifname "nextcloud" oif "{{ interface }}" counter accept
-
-		# allow mail internet access
-		iifname "mail" oifname "{{ interface }}" ip daddr != {{ local_subnet }} accept
+		# allows wireguard access for transmission
+		# uses oifname instead of oif because the wireguard interface can be destroyed / recreated
+		iif "{{ service_transmission_network }}" oifname "{{ service_transmission_wg_interface }}" accept
     }
 }

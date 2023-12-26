@@ -11,33 +11,19 @@
   become: true
   community.docker.docker_network:
     name: "{{ transmission_bridge_name }}"
+    ipam_config:
+      - subnet: "{{ transmission_network_subnet }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ transmission_bridge_name }}"
  
 - name: Create docker volume
   become: true
   ansible.builtin.file:
     path: "{{ transmission_vol_base }}"
-    mode: 0700
+    mode: "700"
     state: directory
     owner: "{{ transmission_vol_uid }}"
     group: "{{ transmission_vol_gid }}"
-
-- name: Set transmission config
-  become: true
-  ansible.builtin.lineinfile: 
-    dest: "{{ transmission_vol_base }}/settings.json"
-    line: "{{ item }}"
-    create: true
-    mode: 0600
-    owner: "{{ transmission_vol_uid }}"
-    group: "{{ transmission_vol_gid }}"
-  with_items:
-    - '{'
-    - '"rpc-whitelist-enabled": false,'
-    - '"rpc-host-whitelist-enable": true,'
-    - '"rpc-host-whitelist": "{{ transmission_hostname }}"'
-    - '"download-dir": "{{ transmission_download_dir }}",'
-    - '"encryption": 2'
-    - '}'
 
 - name: Add routing table
   register: routingtable
@@ -52,7 +38,7 @@
   ansible.builtin.template:
     src: "{{ transmission_route_template }}"
     dest: "/etc/systemd/network/{{ systemd_network_config }}.network.d/torrent.conf"
-    mode: 0644
+    mode: "644" 
     
 - name: Restart networking
   become: true
@@ -72,11 +58,50 @@
     pull: true
     networks:
       - name: "{{ transmission_bridge_name }}"
+        ipv4_address: "{{ transmission_network_ipv4_address }}"
     cap_drop:
       - all
     volumes:
       - "{{ transmission_vol_base }}:{{ transmission_vol_mount_point }}"
-      - "{{ media_vol_base }}:{{ transmission_media_dir }}"
+      - "{{ media_vol_base }}:{{ media_mount_point }}"
     env:
       CONFIG_DIR: "{{ transmission_vol_mount_point }}"
-  
+
+- name: Install system packages
+  become: true
+  apt:
+    pkg:
+      - wireguard
+      - jq
+      
+- name: Copy wireguard script
+  become: true
+  register: wireguardscript
+  ansible.builtin.template:
+    src: mahoneko-wg.sh
+    dest: /usr/local/bin/
+    mode: "700"
+
+- name: Copy wireguard credentials
+  become: true
+  register: wireguardconfig
+  ansible.builtin.copy:
+    src: login.conf
+    dest: /etc/wireguard/
+    mode: "600"
+
+- name: Copy systemd service
+  become: true
+  register: wireguardservice
+  ansible.builtin.copy:
+    src: wg-mahoneko.service
+    dest: /etc/systemd/system/
+    mode: "644"
+    
+- name: Enable wireguard service
+  become: true
+  ansible.builtin.systemd:
+    name: wg-mahoneko.service
+    daemon_reload: "{{ wireguardservice.changed }}"
+    enabled: true
+    state: "{{ 'restarted' if wireguardconfig.changed or wireguardscript.changed else 'started' }}"

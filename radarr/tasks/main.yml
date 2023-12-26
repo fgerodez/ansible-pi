@@ -25,6 +25,7 @@
     restart_policy: always
     user: "{{ radarr_user }}:{{ radarr_group }}"
     pull: true
+    memory: 128M
     networks:
       - name: "{{ radarr_bridge_name }}"
         ipv6_address: "{{ radarr_ipv6_address }}"

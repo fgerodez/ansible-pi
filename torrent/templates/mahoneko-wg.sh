@@ -64,20 +64,20 @@ up ()
 	# Start the WireGuard interface.
 	echo "Trying to create the wireguard interface..."
 
-	ip link add wg0 type wireguard
-	ip addr add "$peer_ip/32" dev wg0
+	ip link add {{ transmission_wg_interface }} type wireguard
+	ip addr add "$peer_ip/32" dev {{ transmission_wg_interface }}
 
-	wg setconf wg0 "/etc/wireguard/pia_${PIA_COUNTRY}.conf"
+	wg setconf {{ transmission_wg_interface }} "/etc/wireguard/pia_${PIA_COUNTRY}.conf"
 
-	ip link set wg0 up
+	ip link set {{ transmission_wg_interface }} up
 
 	# Add default route to torrent routing table
-	ip route add default dev wg0 metric 2 table torrent
+	ip route add default dev {{ transmission_wg_interface }} metric 2 table torrent
 
 	echo -e "The WireGuard interface got created."
 
 	payload_and_signature=$(curl -ks -m 5 \
-							   --interface wg0 \
+							   --interface {{ transmission_wg_interface }} \
 							   --cacert ca.rsa.4096.crt \
 							   -G --data-urlencode "token=${token}" \
 							   "https://$pia_server_vip:19999/getSignature")
@@ -94,10 +94,7 @@ up ()
 
 	echo "Received port ${port}"
 
-	transmissionIp=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' transmission)
-	
-	# Dest nat wg0 port forwarding traffic to transmission container
-	nft add rule mahonat prerouting iif wg0 tcp dport ${port} dnat ${transmissionIp}:${port}
+	docker exec {{ transmission_container_name }} /usr/bin/transmission-remote 127.0.0.1 --port "$port"
 	
 	systemd-notify --ready
 
@@ -106,7 +103,7 @@ up ()
 	# alive. The servers have no mechanism to track your activity, so they
 	# will just delete the port forwarding if you don't send keepalives.
 	while true; do
-		bind_port_response=$(curl -Gks --interface wg0 -m 5 \
+		bind_port_response=$(curl -Gks --interface {{ transmission_wg_interface }} -m 5 \
 								--cacert ca.rsa.4096.crt \
 								--data-urlencode "payload=${payload}" \
 								--data-urlencode "signature=${signature}" \
@@ -125,8 +122,8 @@ up ()
 
 down()
 {
-	ip link set wg0 down
-	ip link del wg0
+	ip link set {{ transmission_wg_interface }} down
+	ip link del {{ transmission_wg_interface }}
 
 	rm "/etc/wireguard/pia_${PIA_COUNTRY}.conf"
 }
