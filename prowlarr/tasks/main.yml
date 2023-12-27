@@ -25,7 +25,6 @@
     restart_policy: always
     user: "{{ prowlarr_user }}:{{ prowlarr_group }}"
     pull: true
-    memory: 128M
     networks:
       - name: "{{ prowlarr_bridge_name }}"  
         ipv6_address: "{{ prowlarr_ipv6_address }}"

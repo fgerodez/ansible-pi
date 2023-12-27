@@ -26,7 +26,6 @@
     restart_policy: always
     user: "{{ sonarr_user }}:{{ sonarr_group }}"
     pull: true
-    memory: 128M
     networks:
       - name: "{{ sonarr_bridge_name }}"
         ipv6_address: "{{ sonarr_ipv6_address }}"

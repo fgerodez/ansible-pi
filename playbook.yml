@@ -28,22 +28,22 @@
         transmission_network_subnet: "{{ service_transmission_ipv4_subnet }}"
         transmission_network_ipv4_address: "{{ service_transmission_ipv4_address }}"
 
-    # - role: sonarr
-    #   vars:
-    #     sonarr_ipv6_address: "{{ service_sonarr_ipv6_address }}"
-    #     sonarr_ipv4_address: "{{ service_sonarr_ipv4_address }}"
-    #     sonarr_network_ipv6_subnet: "{{ service_sonarr_network_ipv6_subnet }}"
-    #     sonarr_network_subnet: "{{ service_sonarr_network_subnet }}"
+    - role: sonarr
+      vars:
+        sonarr_ipv6_address: "{{ service_sonarr_ipv6_address }}"
+        sonarr_ipv4_address: "{{ service_sonarr_ipv4_address }}"
+        sonarr_network_ipv6_subnet: "{{ service_sonarr_network_ipv6_subnet }}"
+        sonarr_network_subnet: "{{ service_sonarr_network_subnet }}"
 
-    # - role: radarr
-    #   vars:
-    #     radarr_network_ipv6_subnet: "{{ service_radarr_network_ipv6_subnet }}"
-    #     radarr_ipv6_address: "{{ service_radarr_ipv6_address }}"
+    - role: radarr
+      vars:
+        radarr_network_ipv6_subnet: "{{ service_radarr_network_ipv6_subnet }}"
+        radarr_ipv6_address: "{{ service_radarr_ipv6_address }}"
 
-    # - role: prowlarr
-    #   vars:
-    #     prowlarr_network_ipv6_subnet: "{{ service_prowlarr_network_ipv6_subnet }}"
-    #     prowlarr_ipv6_address: "{{ service_prowlarr_ipv6_address }}"
+    - role: prowlarr
+      vars:
+        prowlarr_network_ipv6_subnet: "{{ service_prowlarr_network_ipv6_subnet }}"
+        prowlarr_ipv6_address: "{{ service_prowlarr_ipv6_address }}"
       
     - role: mail
       vars:
