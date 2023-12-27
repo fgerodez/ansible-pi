@@ -25,7 +25,7 @@ table inet filter {
         type nat hook postrouting priority srcnat;
 
 		# masquerades ipv4 outgoing traffic
-        meta nfproto ipv4 iif $MASQUERADE masquerade
+        meta nfproto ipv4 iifname $MASQUERADE masquerade
     }
 
 	chain prerouting {
@@ -62,7 +62,7 @@ table inet filter {
         ct state invalid drop
 
         # allows loopback
-        iif lo accept
+        iifname lo accept
 
         # allows icmp and local ipv4
         ip protocol icmp accept
@@ -94,10 +94,10 @@ table inet filter {
 		ip daddr {{ local_subnet }} drop
 
 		# allows internet access for all interfaces in the set
-		iif $FORWARD oif "{{ interface }}" accept
+		iifname $FORWARD oif "{{ interface }}" accept
 
 		# allows wireguard access for transmission
 		# uses oifname instead of oif because the wireguard interface can be destroyed / recreated
-		iif "{{ service_transmission_network }}" oifname "{{ service_transmission_wg_interface }}" accept
+		iifname "{{ service_transmission_network }}" oifname "{{ service_transmission_wg_interface }}" accept
     }
 }

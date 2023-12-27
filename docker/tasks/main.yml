@@ -38,7 +38,8 @@
       "userns-remap": "default",
       "iptables": false,
       "bridge": "none",
-      "data-root": "{{ docker_root_folder }}"
+      "data-root": "{{ docker_root_folder }}",
+      "log-driver": "journald"
       }
   register: docker_init
 
