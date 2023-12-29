@@ -30,22 +30,15 @@
 
 - name: Copy wired network config
   become: true
-  register: networkconfig
+  notify: "Restart networking"
   ansible.builtin.template:
     src: wired.network.j2
-    dest: "/etc/systemd/network/{{ systemd_network_config }}.network"
+    dest: "/etc/systemd/network/{{ system_systemd_network }}.network"
     mode: "644"
 
 - name: Create dropin folder
   become: true
   ansible.builtin.file:
-    path: "/etc/systemd/network/{{ systemd_network_config }}.network.d"
+    path: "/etc/systemd/network/{{ system_systemd_network }}.network.d"
     state: "directory"
     mode: "755"
-    
-- name: Restart network service
-  become: true
-  ansible.builtin.systemd:
-    name: systemd-networkd.service
-    state: "restarted"
-  when: networkconfig.changed

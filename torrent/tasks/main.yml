@@ -33,19 +33,12 @@
     line: "2 torrent"
 
 - name: Copy route ruleset
-  register: routingrules
   become: true
+  notify: "Restart networking"        
   ansible.builtin.template:
     src: "{{ transmission_route_template }}"
     dest: "/etc/systemd/network/{{ systemd_network_config }}.network.d/torrent.conf"
     mode: "644" 
-    
-- name: Restart networking
-  become: true
-  ansible.builtin.systemd:
-    name: systemd-networkd.service
-    state: "restarted"
-  when: routingtable.changed or routingrules.changed
     
 - name: Create transmission container
   become: true
