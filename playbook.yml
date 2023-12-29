@@ -6,8 +6,10 @@
       vars:
          system_mail_server: "{{ mail_server_hostname }}"
          system_mail_domain: "{{ mail_server_hostname }}"
-
-    - role: networking
+         system_ssh_users: "{{ ssh_users }}"
+         system_ssh_port: "{{ ssh_port }}"
+         system_interface_name: "{{ interface }}"
+         system_ipv6_address: "{{ ipv6_address }}"
       
     - role: nftables
 

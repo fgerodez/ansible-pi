@@ -11,6 +11,7 @@
       - e2fsprogs
       - dphys-swapfile
       - vim-tiny
+      - ssh
       - ssmtp
 
 - name: Copy ssmtp config
@@ -20,21 +21,31 @@
     dest: /etc/ssmtp/ssmtp.conf
     mode: "600"
 
-# - name: Copy boot configuration
-#   become: true
-#   copy: 
-#     src: "{{ item.src }}" 
-#     dest: "{{ item.dest }}"
-#     mode: u=rw,g=r,o=r
-#   loop:
-#     - { src: ./data/config/boot/raspi-firmware, dest: /etc/default/raspi-firmware }
-#     - { src: ./data/config/boot/raspi-firmware-custom, dest: /etc/default/raspi-firmware-custom }
-#     - { src: ./data/config/boot/raspi-extra-cmdline, dest: /etc/default/raspi-extra-cmdline }
-#   register: bootConfig
-#   when: rpi
-  
-# - name: Update initramfs
-#   become: true
-#   command: /usr/sbin/update-initramfs -u -k all
-#   when: rpi and bootConfig.changed  
+- name: Copy sshd config
+  become: true
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    mode: "644"
 
+- name: Copy wired network config
+  become: true
+  register: networkconfig
+  ansible.builtin.template:
+    src: wired.network.j2
+    dest: "/etc/systemd/network/{{ systemd_network_config }}.network"
+    mode: "644"
+
+- name: Create dropin folder
+  become: true
+  ansible.builtin.file:
+    path: "/etc/systemd/network/{{ systemd_network_config }}.network.d"
+    state: "directory"
+    mode: "755"
+    
+- name: Restart network service
+  become: true
+  ansible.builtin.systemd:
+    name: systemd-networkd.service
+    state: "restarted"
+  when: networkconfig.changed
