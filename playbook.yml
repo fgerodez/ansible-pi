@@ -2,7 +2,10 @@
   vars_files:
     - ./external_vars.yml
   roles:
-    # - role: system
+    - role: system
+      vars:
+         system_mail_server: "{{ mail_server_hostname }}"
+         system_mail_domain: "{{ mail_server_hostname }}"
 
     - role: networking
       

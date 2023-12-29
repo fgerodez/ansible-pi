@@ -1,11 +1,11 @@
-mynetworks = 127.0.0.0/8 [::1]/128 [fe80::]/64
+mynetworks = 127.0.0.0/8 [::1]/128
 
 myhostname = {{ mail_hostname }}
 
 alias_database = 
 alias_maps = 
 
-compatibility_level = 3.6
+compatibility_level = 3.7
 
 biff = no
 readme_directory = no
@@ -51,7 +51,6 @@ smtp_address_preference = ipv4
 smtpd_sasl_path = inet:{{ dovecot_container_name }}:{{ dovecot_sasl_port }}
 smtpd_sasl_type = dovecot
 smtpd_sasl_security_options = noanonymous
-smtpd_sasl_local_domain = $myhostname
 
 # Disable local delivery
 mydestination = 
@@ -71,9 +70,9 @@ internal_mail_filter_classes = bounce
 
 # Virtual mailboxes, domains & aliases
 virtual_transport = lmtp:inet:{{ dovecot_container_name }}:{{ dovecot_lmtp_port }}
-virtual_mailbox_domains = sqlite:{{ postfix_config_mount_path }}/virtual-mailbox-domains.cf
-virtual_mailbox_maps = sqlite:{{ postfix_config_mount_path }}/maps.cf
-virtual_alias_maps = sqlite:{{ postfix_config_mount_path }}/aliases.cf
+virtual_mailbox_domains = proxy:sqlite:{{ postfix_config_mount_path }}/virtual-mailbox-domains.cf
+virtual_mailbox_maps = proxy:sqlite:{{ postfix_config_mount_path }}/maps.cf
+virtual_alias_maps = proxy:sqlite:{{ postfix_config_mount_path }}/aliases.cf
 
 # Postscreen config
 postscreen_greet_action = enforce

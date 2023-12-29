@@ -3,6 +3,7 @@
   apt:
     pkg:
       - fail2ban
+      - ssmtp
 
 - name: Copy configuration
   become: true

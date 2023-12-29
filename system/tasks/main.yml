@@ -1,32 +1,40 @@
 - name: Upgrade all packages
   become: true
-  apt:
+  ansible.builtin.apt:
     cache_valid_time: 36000
     upgrade: true
         
 - name: Install system packages
   become: true
-  apt:
+  ansible.builtin.apt:
     pkg:
       - e2fsprogs
       - dphys-swapfile
       - vim-tiny
+      - ssmtp
 
-- name: Copy boot configuration
+- name: Copy ssmtp config
   become: true
-  copy: 
-    src: "{{ item.src }}" 
-    dest: "{{ item.dest }}"
-    mode: u=rw,g=r,o=r
-  loop:
-    - { src: ./data/config/boot/raspi-firmware, dest: /etc/default/raspi-firmware }
-    - { src: ./data/config/boot/raspi-firmware-custom, dest: /etc/default/raspi-firmware-custom }
-    - { src: ./data/config/boot/raspi-extra-cmdline, dest: /etc/default/raspi-extra-cmdline }
-  register: bootConfig
-  when: rpi
+  ansible.builtin.template:
+    src: ssmtp.conf.j2
+    dest: /etc/ssmtp/ssmtp.conf
+    mode: "600"
+
+# - name: Copy boot configuration
+#   become: true
+#   copy: 
+#     src: "{{ item.src }}" 
+#     dest: "{{ item.dest }}"
+#     mode: u=rw,g=r,o=r
+#   loop:
+#     - { src: ./data/config/boot/raspi-firmware, dest: /etc/default/raspi-firmware }
+#     - { src: ./data/config/boot/raspi-firmware-custom, dest: /etc/default/raspi-firmware-custom }
+#     - { src: ./data/config/boot/raspi-extra-cmdline, dest: /etc/default/raspi-extra-cmdline }
+#   register: bootConfig
+#   when: rpi
   
-- name: Update initramfs
-  become: true
-  command: /usr/sbin/update-initramfs -u -k all
-  when: rpi and bootConfig.changed  
+# - name: Update initramfs
+#   become: true
+#   command: /usr/sbin/update-initramfs -u -k all
+#   when: rpi and bootConfig.changed  
 
