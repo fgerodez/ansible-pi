@@ -3,14 +3,10 @@
 flush ruleset
 
 table inet filter {
-    chain postrouting {
-        type nat hook postrouting priority srcnat;
 
-		# masquerades ipv4 outgoing traffic
-        meta nfproto ipv4 oifname {{ nftables_masquerade_networks }} masquerade
-    }
-
-	chain prerouting {
+	# Chain dedicated to destination nat rules.
+	# It is used to forward http(s), smtp and imap traffic to the relevant containers.
+	chain prerouting-dnat {
 		type nat hook prerouting priority dstnat;
 
 		# transfers traffic to postfix for port 25 ipv4 and ipv6
@@ -40,11 +36,22 @@ table inet filter {
 		# transfers wireguard incoming traffic to transmission container
 		# uses iifname instead of iff here because the wireguard interface can be recreated frequently.
 		meta nfproto ipv4 iifname {{ nftables_torrent_wg }} dnat to {{ nftables_torrent_ipv4 }}
-
-		# marks transmission outgoing packets to route them through wireguard via ip rule
-		ip saddr {{ nftables_torrent_ipv4 }} ip daddr != {{ nftables_caddy_ipv4 }} meta mark set {{ nftables_torrent_traffic_mark }}
     }
 
+	# Chain used to mark packets before routing decision is made via ip rule.
+	# We can't use the nat type because "only the first packet of a given flow hits nat chains".
+	# The filter type must be used for this use case.
+	# https://wiki.nftables.org/wiki-nftables/index.php/Configuring_chains#Base_chain_types
+	chain prerouting-filter {
+	    type filter hook prerouting priority filter;
+
+		# marks transmission outgoing packets that do not go to the reverse proxy.
+		# there packets will be routed through wireguard
+		ip saddr {{ nftables_torrent_ipv4 }} ip daddr != {{ nftables_caddy_ipv4 }} meta mark set {{ nftables_torrent_traffic_mark }}
+	}	
+
+	# Chain that handles traffic directed at the host itself. The only open port is ssh,
+	# everything else is forwarded to dedicated containers.
     chain input {
         type filter hook input priority 0; policy drop
 
@@ -71,6 +78,7 @@ table inet filter {
         meta nfproto ipv6 tcp dport {{ nftables_allow_ipv6_ports }} accept
     }
 
+	# Chain that controls access between the different container networks and the internet.
     chain forward {
         type filter hook forward priority 0; policy drop
 
@@ -91,5 +99,13 @@ table inet filter {
 
 		# allows wireguard access for transmission
 		iifname {{ nftables_torrent_interface }} oifname {{ nftables_torrent_wg }} accept
+    }
+
+	# Chain that masquerades ipv4 traffic for a selected set of outgoing interfaces.
+	chain postrouting {
+        type nat hook postrouting priority srcnat;
+
+		# masquerades ipv4 outgoing traffic
+        meta nfproto ipv4 oifname {{ nftables_masquerade_networks }} masquerade
     }
 }
