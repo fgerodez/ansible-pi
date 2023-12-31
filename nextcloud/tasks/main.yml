@@ -6,23 +6,18 @@
     name: "{{ nextcloud_docker_network }}"
     enable_ipv6: yes
     ipam_config:
-      - subnet: "{{ service_nextcloud_ipv4_subnet }}"
       - subnet: "{{ nextcloud_network_ipv6_subnet }}"
     driver_options:
       com.docker.network.bridge.name: "{{ nextcloud_docker_network }}"
-      com.docker.network.bridge.inhibit_ipv4: "true"
 
 - name: Create volume base
   become: true
   ansible.builtin.file:
     path: "{{ nextcloud_vol_base }}"
     state: directory
-    mode: 0700
+    mode: "700"
     owner: root
     group: root
-
-- name: Install caddy
-  ansible.builtin.include_tasks: caddy.yml
     
 - name: Install nextcloud
   ansible.builtin.include_tasks: nextcloud.yml

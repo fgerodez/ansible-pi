@@ -1,17 +1,8 @@
-{
-	http_port {{ nextcloud_caddy_port }}
-	admin off
-}
+{{ caddy_nextcloud_hostname }} {
+      root * {{ caddy_nextcloud_mount_path }}
 
-:8080 {
-      root * {{ nextcloud_caddy_mount_point }}
-
-      php_fastcgi {{ nextcloud_docker_container }}:9000 {
-        root {{ nextcloud_mount_src }}
-		
-		header_up Host {{ nextcloud_hostname }}
-		header_up X-Real-IP {header.X-Real-IP}
-        header_up X-Forwarded-For {header.X-Forwarded-For}
+      php_fastcgi {{ caddy_nextcloud_target }} {
+        root {{ caddy_nextcloud_php_root }}
 	  }
 
  	  file_server

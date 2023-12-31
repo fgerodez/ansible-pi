@@ -6,16 +6,16 @@
     name: "{{ caddy_network_name }}"
     enable_ipv6: yes
     ipam_config:
-      - subnet: "{{ caddy_network_ipv6_subnet }}"
+      - subnet: "{{ caddy_ipv6_subnet }}"
+      - subnet: "{{ caddy_ipv4_subnet }}"
     driver_options:
-      com.docker.network.bridge.name: "{{ caddy_bridge_name }}"
-      com.docker.network.bridge.inhibit_ipv4: "true"
+      com.docker.network.bridge.name: "{{ caddy_network_name }}"
 
 - name: Create volume base
   become: true
   ansible.builtin.file:
     path: "{{ caddy_vol_base }}"
-    mode: 0700
+    mode: "700"
     state: directory
     owner: root
     group: root
@@ -24,7 +24,7 @@
   become: true
   ansible.builtin.file:
     path: "{{ item }}"
-    mode: 0700
+    mode: "700"
     state: directory
     owner: "{{ caddy_host_uid }}"
     group: "{{ caddy_host_gid }}"
@@ -32,27 +32,18 @@
     - "{{ caddy_vol_data }}"
     - "{{ caddy_vol_config }}"
 
-- name: Copy config file
-  become: true
-  notify: "Restart caddy"
-  ansible.builtin.copy:
-    src: Caddyfile
-    dest: "{{ caddy_vol_config }}"
-    mode: 0600
-    owner: "{{ caddy_host_uid }}"
-    group: "{{ caddy_host_gid }}"
-
-- name: Copy reverse proxy configs
+- name: Copy config files
   become: true
   notify: "Restart caddy"
   ansible.builtin.template:
-    src: reverse.caddy.j2
-    dest: "{{ caddy_vol_config}}/{{ item.hostname }}.caddy"
-    mode: 0600
+    src: "{{ item }}"
+    dest: "{{ caddy_vol_config }}/{{ item | basename | replace('.j2', '') }}"
+    mode: "600"
     owner: "{{ caddy_host_uid }}"
     group: "{{ caddy_host_gid }}"
-  loop: "{{ caddy_proxies }}"
-    
+  with_fileglob:
+    - "../templates/*.j2"
+
 - name: Create container
   become: true
   community.docker.docker_container:
@@ -63,12 +54,12 @@
     pull: true
     cap_drop:
       - all
-    capabilities:
-      - net_bind_service
     user: "{{ caddy_uid }}:{{ caddy_gid }}"
     networks:
       - name: "{{ caddy_network_name }}"
         ipv6_address: "{{ caddy_ipv6_address }}"
+        ipv4_address: "{{ caddy_ipv4_address }}"
     volumes:
       - "{{ caddy_vol_data }}:{{ caddy_mount_data }}"
       - "{{ caddy_vol_config }}:{{ caddy_mount_config }}"
+      - "{{ caddy_nextcloud_src_path }}:{{ caddy_nextcloud_mount_path }}:ro"

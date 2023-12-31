@@ -30,6 +30,7 @@
     pull: true
     networks:
       - name: "{{ nextcloud_docker_network }}"
+        ipv6_address: "{{ nextcloud_ipv6_address }}"
     state: started
     cap_drop:
       - all

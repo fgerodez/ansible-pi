@@ -60,7 +60,7 @@
     env:
       CONFIG_DIR: "{{ transmission_vol_mount_point }}"
 
-- name: Install system packages
+- name: Install wireguard packages
   become: true
   apt:
     pkg:

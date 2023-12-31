@@ -2,61 +2,51 @@
 
 flush ruleset
 
-# set of interfaces with masquerated ipv4 traffic
-define MASQUERADE = {
-    "radarr",
-	"sonarr",
-	"prowlarr",
-	"mail",
-	"{{ service_transmission_network }}"
-}
-
-# set of interfaces with forwarded traffic
-define FORWARD = {
-    "radarr",
-	"sonarr",
-	"prowlarr",
-	"mail",
-	"nextcloud"
-}
-
 table inet filter {
     chain postrouting {
         type nat hook postrouting priority srcnat;
 
 		# masquerades ipv4 outgoing traffic
-        meta nfproto ipv4 iifname $MASQUERADE masquerade
+        meta nfproto ipv4 oifname {{ nftables_masquerade_networks }} masquerade
     }
 
 	chain prerouting {
 		type nat hook prerouting priority dstnat;
 
 		# transfers traffic to postfix for port 25 ipv4 and ipv6
-		ip daddr {{ local_ip }} tcp dport 25 dnat to {{ service_mail_postfix_ipv4_address }}:2525
-		ip6 daddr {{ local_ipv6 }} tcp dport 25 dnat to [{{ service_mail_postfix_ipv6_address }}]:2525
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 25 dnat to {{ nftables_postfix_ipv4 }}:2525
+		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 25 dnat to [{{ nftables_postfix_ipv6 }}]:2525
 
 		# transfers traffic to postfix for port 587 ipv4 and ipv6
-		ip daddr {{ local_ip }} tcp dport 587 dnat to {{ service_mail_postfix_ipv4_address }}:25587
-		ip6 daddr {{ local_ipv6 }} tcp dport 587 dnat to [{{ service_mail_postfix_ipv6_address }}]:25587
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 587 dnat to {{ nftables_postfix_ipv4 }}:25587
+		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 587 dnat to [{{ nftables_postfix_ipv6 }}]:25587
 
 		# transfers traffic to dovecot for port 4190
-		ip daddr {{ local_ip }} tcp dport 4190 dnat to {{ service_mail_dovecot_ipv4_address }}
-		ip6 daddr {{ local_ipv6 }} tcp dport 4190 dnat to {{ service_mail_dovecot_ipv6_address }}
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 4190 dnat to {{ nftables_dovecot_ipv4 }}
+		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 4190 dnat to {{ nftables_dovecot_ipv6 }}
 
 		# transfers traffic to dovecot for port 993
-		ip daddr {{ local_ip }} tcp dport 993 dnat to {{ service_mail_dovecot_ipv4_address }}:10993
-		ip6 daddr {{ local_ipv6 }} tcp dport 993 dnat to [{{ service_mail_dovecot_ipv6_address }}]:10993
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 993 dnat to {{ nftables_dovecot_ipv4 }}:10993
+		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 993 dnat to [{{ nftables_dovecot_ipv6 }}]:10993
 
+		# transfers traffic to reverse proxy for port 80
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 80 dnat to {{ nftables_caddy_ipv4 }}:8080
+		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 80 dnat to [{{ nftables_caddy_ipv6 }}]:8080
+
+		# transfers traffic to reverse proxy for port 443
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 443 dnat to {{ nftables_caddy_ipv4 }}:8443
+		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 443 dnat to [{{ nftables_caddy_ipv6 }}]:8443
+		
 		# transfers wireguard incoming traffic to transmission container
 		# uses iifname instead of iff here because the wireguard interface can be recreated frequently.
-		meta nfproto ipv4 iifname "{{ service_transmission_wg_interface }}" dnat to {{ service_transmission_ipv4_address }}
+		meta nfproto ipv4 iifname {{ nftables_torrent_wg }} dnat to {{ nftables_torrent_ipv4 }}
     }
 
     chain input {
         type filter hook input priority 0; policy drop
 
         # allows established/related connections
-        ct state {established, related} accept
+        ct state { established, related } accept
 
         # drops invalid connections
         ct state invalid drop
@@ -66,7 +56,7 @@ table inet filter {
 
         # allows icmp and local ipv4
         ip protocol icmp accept
-        ip saddr {{ local_subnet }} accept
+        ip saddr {{ nftables_host_ipv4_subnet }} accept
 
         # allows ipv6 local peers
         ip6 saddr fe80::/10 accept
@@ -74,11 +64,8 @@ table inet filter {
 		# allows icmpv6 (Neighbor Discovery ND)
 	    meta l4proto ipv6-icmp accept
 
-        # allows http(s) on ipv4/6 
-        tcp dport { http, https } accept
-
-		# allows ssh on ipv6 only
-        meta nfproto ipv6 tcp dport { {{ ssh_port }} } accept
+		# allows specified ports on ipv6 only
+        meta nfproto ipv6 tcp dport {{ nftables_allow_ipv6_ports }} accept
     }
 
     chain forward {
@@ -88,16 +75,19 @@ table inet filter {
 		ct status dnat accept
 
         # allows established connections
-        ct state {related,established} accept
+        ct state { related, established } accept
 
 		# disables forwarding to local ipv4 network
-		ip daddr {{ local_subnet }} drop
+		ip daddr {{ nftables_host_ipv4_subnet }} drop
 
-		# allows internet access for all interfaces in the set
-		iifname $FORWARD oif "{{ interface }}" accept
+		# allows internet access for specified networks
+		iifname {{ nftables_internet_networks }} oif {{ nftables_host_interface }} accept
+
+		# allows access to reverse proxied network
+		iifname {{ nftables_caddy_network }} oifname {{ nftables_reverse_proxied_networks }} accept
 
 		# allows wireguard access for transmission
 		# uses oifname instead of oif because the wireguard interface can be destroyed / recreated
-		iifname "{{ service_transmission_network }}" oifname "{{ service_transmission_wg_interface }}" accept
+		iifname {{ nftables_torrent_interface }} oifname {{ nftables_torrent_wg }} accept
     }
 }

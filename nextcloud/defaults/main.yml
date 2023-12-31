@@ -1,5 +1,6 @@
 nextcloud_uid: 82
 nextcloud_gid: 82
+nextcloud_port: 9000
 nextcloud_docker_container: "nextcloud"
 nextcloud_docker_network: "nextcloud"
 nextcloud_vol_uid: "{{ userns_root_uid|int + nextcloud_uid|int }}"
@@ -23,16 +24,3 @@ nextcloud_mariadb_vol_base: "{{ nextcloud_vol_base }}/mariadb"
 nextcloud_mariadb_vol_data: "{{ nextcloud_mariadb_vol_base }}/data"
 nextcloud_mariadb_vol_config: "{{ nextcloud_mariadb_vol_base}}/config"
 nextcloud_mariadb_vol_dumps: "{{ nextcloud_mariadb_vol_base}}/dumps"
-
-nextcloud_caddy_uid: 1000
-nextcloud_caddy_gid: 1000
-nextcloud_caddy_port: 8080
-nextcloud_caddy_docker_image: caddy
-nextcloud_caddy_docker_container: "nextcloud_caddy"
-nextcloud_caddy_vol_data: "{{ nextcloud_vol_base}}/caddy/data"
-nextcloud_caddy_vol_config: "{{ nextcloud_vol_base }}/caddy/config"
-nextcloud_caddy_vol_uid: "{{ userns_root_uid|int + nextcloud_caddy_uid|int }}"
-nextcloud_caddy_vol_gid: "{{ userns_root_uid|int + nextcloud_caddy_gid|int }}"
-nextcloud_caddy_mount_point: "/nextcloud"
-nextcloud_caddy_mount_data: "/data"
-nextcloud_caddy_mount_config: "/etc/caddy"
