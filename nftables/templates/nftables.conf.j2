@@ -40,6 +40,9 @@ table inet filter {
 		# transfers wireguard incoming traffic to transmission container
 		# uses iifname instead of iff here because the wireguard interface can be recreated frequently.
 		meta nfproto ipv4 iifname {{ nftables_torrent_wg }} dnat to {{ nftables_torrent_ipv4 }}
+
+		# marks transmission outgoing packets to route them through wireguard via ip rule
+		ip saddr {{ nftables_torrent_ipv4 }} ip daddr != {{ nftables_caddy_ipv4 }} meta mark set {{ nftables_torrent_traffic_mark }}
     }
 
     chain input {
@@ -83,11 +86,10 @@ table inet filter {
 		# allows internet access for specified networks
 		iifname {{ nftables_internet_networks }} oif {{ nftables_host_interface }} accept
 
-		# allows access to reverse proxied network
+		# allows caddy access to reverse proxied network
 		iifname {{ nftables_caddy_network }} oifname {{ nftables_reverse_proxied_networks }} accept
 
 		# allows wireguard access for transmission
-		# uses oifname instead of oif because the wireguard interface can be destroyed / recreated
 		iifname {{ nftables_torrent_interface }} oifname {{ nftables_torrent_wg }} accept
     }
 }
