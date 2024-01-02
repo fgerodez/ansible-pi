@@ -51,7 +51,7 @@
     image: "{{ caddy_docker_image }}"
     restart_policy: always
     state: started
-    pull: true
+    pull: false
     cap_drop:
       - all
     user: "{{ caddy_uid }}:{{ caddy_gid }}"

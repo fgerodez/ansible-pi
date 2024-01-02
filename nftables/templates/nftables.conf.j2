@@ -35,7 +35,7 @@ table inet filter {
 		
 		# transfers wireguard incoming traffic to transmission container
 		# uses iifname instead of iff here because the wireguard interface can be recreated frequently.
-		meta nfproto ipv4 iifname {{ nftables_torrent_wg }} dnat to {{ nftables_torrent_ipv4 }}
+		meta nfproto ipv4 iifname {{ nftables_torrent_wg }} tcp dport != {{ nftables_torrent_rpc_port }} dnat to {{ nftables_torrent_ipv4 }}
     }
 
 	# Chain used to mark packets before routing decision is made via ip rule.

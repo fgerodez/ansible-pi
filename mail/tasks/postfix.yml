@@ -25,7 +25,7 @@
     image: "mahoneko/postfix:latest"
     restart_policy: always
     state: started
-    pull: true
+    pull: false
     cap_drop:
       - all
     capabilities:

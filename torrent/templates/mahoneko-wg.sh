@@ -93,8 +93,6 @@ up ()
 	port="$(echo "$payload" | base64 -d | jq -r '.port')"
 
 	echo "Received port ${port}"
-
-	docker exec {{ transmission_container_name }} /usr/bin/transmission-remote 127.0.0.1 --port "$port"
 	
 	systemd-notify --ready
 
@@ -115,6 +113,9 @@ up ()
 			
 			exit 1
 		fi
+
+		# Send the port to transmission
+		docker exec {{ transmission_container_name }} /usr/bin/transmission-remote 127.0.0.1 --port "$port"
 		
 		sleep 900
 	done

@@ -24,7 +24,7 @@
     image: "{{ prowlarr_docker_image }}"
     restart_policy: always
     user: "{{ prowlarr_user }}:{{ prowlarr_group }}"
-    pull: true
+    pull: false
     networks:
       - name: "{{ prowlarr_bridge_name }}"  
         ipv6_address: "{{ prowlarr_ipv6_address }}"

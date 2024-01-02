@@ -24,7 +24,7 @@
     image: "{{ radarr_docker_image }}"
     restart_policy: always
     user: "{{ radarr_user }}:{{ radarr_group }}"
-    pull: true
+    pull: false
     networks:
       - name: "{{ radarr_bridge_name }}"
         ipv6_address: "{{ radarr_ipv6_address }}"

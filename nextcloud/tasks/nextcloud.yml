@@ -27,7 +27,7 @@
     image: "mahoneko/nextcloud:latest"
     restart_policy: always
     user: "{{ nextcloud_uid }}:{{ nextcloud_gid }}"
-    pull: true
+    pull: false
     networks:
       - name: "{{ nextcloud_docker_network }}"
         ipv6_address: "{{ nextcloud_ipv6_address }}"

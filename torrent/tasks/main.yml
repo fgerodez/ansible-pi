@@ -48,7 +48,7 @@
     user: "{{ transmission_uid }}:{{ transmission_uid }}"
     restart_policy: always
     state: started
-    pull: true
+    pull: false
     networks:
       - name: "{{ transmission_bridge_name }}"
         ipv4_address: "{{ transmission_network_ipv4_address }}"

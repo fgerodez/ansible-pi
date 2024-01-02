@@ -6,18 +6,18 @@
 
     - role: nftables
 
-    - role: minidlna
+    #- role: minidlna
       
-    - role: nextcloud
+    #- role: nextcloud
       
     - role: torrent
     
-    - role: sonarr
+    #- role: sonarr
 
-    - role: radarr
+    #- role: radarr
 
-    - role: prowlarr
+    #- role: prowlarr
       
-    - role: mail
+    #- role: mail
    
-    - role: caddy
+    #- role: caddy
