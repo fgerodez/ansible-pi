@@ -38,6 +38,7 @@
       - "{{ nextcloud_vol_src }}:{{ nextcloud_mount_src }}"
       - "{{ nextcloud_vol_config }}:{{ nextcloud_mount_config }}"
       - "{{ nextcloud_vol_data }}:{{ nextcloud_mount_data }}"
+      - "{{ media_vol_base }}:{{ media_mount_point }}"
 
 - name: Copy nextcloud systemd timer
   become: true

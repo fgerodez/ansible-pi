@@ -13,6 +13,7 @@
       - vim-tiny
       - ssh
       - ssmtp
+      - mediainfo
 
 - name: Copy ssmtp config
   become: true

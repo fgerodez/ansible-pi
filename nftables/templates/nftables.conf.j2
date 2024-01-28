@@ -92,7 +92,7 @@ table inet filter {
 		ip daddr {{ nftables_host_ipv4_subnet }} drop
 
 		# allows internet access for specified networks
-		iifname {{ nftables_internet_networks }} oif {{ nftables_host_interface }} accept
+		iifname {{ nftables_internet_networks }} oifname {{ nftables_host_interface }} accept
 
 		# allows caddy access to reverse proxied network
 		iifname {{ nftables_caddy_network }} oifname {{ nftables_reverse_proxied_networks }} accept
