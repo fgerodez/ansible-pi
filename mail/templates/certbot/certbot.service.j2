@@ -8,10 +8,11 @@ Description=Certbot renewal service
 ExecStart=/usr/bin/docker run \
     --attach STDOUT \
 	--attach STDERR \
+	--network {{ mail_bridge_name }} \
 	--rm \
 	--cap-drop all \
-	--volume /docker/mail/certbot:/etc/letsencrypt \
-	--volume /docker/mail/ovh.ini:/etc/letsencrypt/ovh.ini:ro \
+	--volume {{ mail_vol_base }}/certbot:/etc/letsencrypt \
+	--volume {{ mail_vol_base }}/ovh.ini:/etc/letsencrypt/ovh.ini:ro \
 	certbot/dns-ovh \
 	renew
 
