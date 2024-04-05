@@ -12,11 +12,11 @@
       
     - role: torrent
     
-    - role: sonarr
+    #- role: sonarr
 
-    - role: radarr
+    #- role: radarr
 
-    - role: prowlarr
+    #- role: prowlarr
       
     - role: mail
    

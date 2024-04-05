@@ -27,7 +27,7 @@
     name: "{{ nextcloud_mariadb_docker_container }}"
     image: "mariadb:{{ nextcloud_mariadb_version }}"
     user: "{{ nextcloud_mariadb_uid }}:{{ nextcloud_mariadb_gid }}"
-    pull: false
+    pull: true
     restart_policy: always
     cap_drop:
       - all

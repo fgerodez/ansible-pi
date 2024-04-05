@@ -51,9 +51,11 @@
     image: "{{ caddy_docker_image }}"
     restart_policy: always
     state: started
-    pull: false
+    pull: true
     cap_drop:
       - all
+    capabilities:
+      - net_bind_service
     user: "{{ caddy_uid }}:{{ caddy_gid }}"
     networks:
       - name: "{{ caddy_network_name }}"

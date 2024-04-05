@@ -41,7 +41,7 @@
     image: "{{ minidlna_docker_image }}"
     restart_policy: always
     user: "{{ minidlna_uid }}:{{ minidlna_gid }}"
-    pull: false
+    pull: true
     mac_address: "{{ minidlna_mac_address }}"
     networks:
       - name: "{{ minidlna_bridge_name }}"

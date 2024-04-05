@@ -43,7 +43,7 @@
     image: "{{ dovecot_docker_image }}"
     restart_policy: always
     state: started
-    pull: false
+    pull: true
     cap_drop:
       - all
     capabilities:
