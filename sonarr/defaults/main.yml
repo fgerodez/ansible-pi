@@ -1,7 +1,7 @@
 sonarr_bridge_name: sonarr
 sonarr_vol_base: "{{ docker_vol_base}}/sonarr"
-sonarr_uid: "{{ userns_root_uid|int + 100 }}"
-sonarr_gid: "{{ userns_root_uid|int + 1000 }}"
+sonarr_uid: "{{ userns_root_uid|int + 999 }}"
+sonarr_gid: "{{ userns_root_uid|int + 999 }}"
 sonarr_container_name: sonarr
 sonarr_docker_image: mahoneko/sonarr:latest
 sonarr_user: sonarr

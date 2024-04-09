@@ -1,5 +1,5 @@
 caddy_docker_container: caddy
-caddy_docker_image: caddy:latest
+caddy_docker_image: caddy:2.7
 caddy_network_name: caddy
 caddy_http_port: 8080
 caddy_https_port: 8443
