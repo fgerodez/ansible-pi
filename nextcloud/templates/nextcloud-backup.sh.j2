@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+cd /tmp
+
+docker exec {{ nextcloud_mariadb_docker_container }} mariabackup --backup --target-dir="/backup/full-backup-$(date +%F)"
+
+docker exec {{ nextcloud_mariadb_docker_container }} mariabackup --prepare --target-dir="/backup/full-backup-$(date +%F)"
+
+cd "{{ nextcloud_mariadb_vol_backup }}"
+
+ls -lt | tail -n +4 | awk '{print $9}' | xargs rm -r
+

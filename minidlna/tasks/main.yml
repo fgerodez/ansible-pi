@@ -1,9 +1,3 @@
-- name: Set sysctl values
-  become: true
-  ansible.posix.sysctl:
-    name: fs.inotify.max_user_watches
-    value: "{{ minidlna_inotify_limit }}"
-
 - name: Create config volume
   become: true
   ansible.builtin.file:

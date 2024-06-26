@@ -10,6 +10,7 @@
     - { path: "{{ nextcloud_mariadb_vol_data }}" }
     - { path: "{{ nextcloud_mariadb_vol_dumps }}" }
     - { path: "{{ nextcloud_mariadb_vol_config }}" }
+    - { path: "{{ nextcloud_mariadb_vol_backup }}" }
 
 - name: Copy mariadb configuration
   become: true
@@ -38,7 +39,39 @@
     state: started
     volumes:
       - "{{ nextcloud_mariadb_vol_data }}:/var/lib/mysql"
+      - "{{ nextcloud_mariadb_vol_backup }}:/backup"
       - "{{ nextcloud_mariadb_vol_config }}:/etc/mysql/conf.d/:ro"
       - "{{ nextcloud_mariadb_vol_dumps }}:/docker-entrypoint-initdb.d:ro"
     env:
       MARIADB_ROOT_PASSWORD: "{{ nextcloud_mariadb_root_password }}"
+
+- name: Copy nextcloud backup script
+  become: true
+  ansible.builtin.template:
+    src: nextcloud-backup.sh.j2
+    dest: "{{ nextcloud_backup_script }}"
+    mode: 0755
+      
+- name: Copy nextcloud backup systemd timer
+  become: true
+  register: nextcloudBackupTimer
+  ansible.builtin.copy:
+    src: nextcloud-backup.timer
+    dest: /etc/systemd/system/
+    mode: 0644
+    directory_mode: 0755
+      
+- name: Copy nextcloud backup service
+  become: true
+  register: nextcloudBackupService
+  ansible.builtin.template:
+    src: nextcloud-backup.service.j2
+    dest: /etc/systemd/system/nextcloud-backup.service
+    mode: 0644
+          
+- name: Enable nextcloud backup timer
+  become: true
+  ansible.builtin.systemd:
+    name: nextcloud-backup.timer
+    enabled: true
+    daemon_reload: "{{ nextcloudBackupTimer.changed or nextcloudBackupService.changed }}"

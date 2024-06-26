@@ -1,0 +1,9 @@
+[Unit]
+Description=Nextcloud backup job timer
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Unit=nextcloud-backup.service
+
+[Install]
+WantedBy=timers.target

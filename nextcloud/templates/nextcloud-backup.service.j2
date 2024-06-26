@@ -1,0 +1,8 @@
+[Install] 
+WantedBy= multi-user.target
+
+[Unit]
+Description=Nextcloud backup service
+
+[Service]
+ExecStart={{ nextcloud_backup_script }}

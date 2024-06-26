@@ -2,4 +2,4 @@
   become: true
   ansible.builtin.systemd:
     name: systemd-networkd.service
-    state: "restarted"
+    state: "restarted"  

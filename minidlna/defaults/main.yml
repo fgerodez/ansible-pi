@@ -4,4 +4,3 @@ minidlna_uid: 100
 minidlna_gid: 101
 minidlna_docker_image: mahoneko/minidlna:latest
 minidlna_vol_base: "{{ docker_vol_base }}/minidlna"
-minidlna_inotify_limit: 100000 

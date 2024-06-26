@@ -37,6 +37,7 @@
       {
       "userns-remap": "default",
       "iptables": false,
+      "ip6tables": false,
       "bridge": "none",
       "data-root": "{{ docker_root_folder }}",
       "log-driver": "journald"
