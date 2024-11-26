@@ -1,0 +1,42 @@
+server:
+    # Interfaces
+    interface: 0.0.0.0       
+
+	# Logging
+	logfile: /dev/stdout
+	use-syslog: no
+  	log-queries: yes
+
+	# Do not enable dnssec
+	module-config: "iterator"
+
+    # Sécurisation
+    access-control: {{ mail_postfix_ipv4_address }} allow     # Autorise les requêtes de localhost
+
+    # DNS récursif
+    do-ip4: yes                         # Active les requêtes IPv4
+    do-ip6: no                          # Désactive IPv6 si non utilisé
+    do-udp: yes                         # Autorise les requêtes UDP
+    do-tcp: yes                         # Autorise les requêtes TCP
+
+	# Listening port
+	port: 53
+	
+    # Optimisation et cache
+    cache-min-ttl: 3600                 # TTL minimum en secondes pour les réponses (1 heure)
+    cache-max-ttl: 86400                # TTL maximum en secondes pour les réponses (24 heures)
+    prefetch: yes                       # Précharge les réponses avant leur expiration
+    prefetch-key: yes                   # Précharge les réponses par clé
+
+    # Sécurité et validation
+    use-caps-for-id: yes                # Randomisation des noms pour la protection contre les attaques
+
+    # Root hints pour la récursivité
+    root-hints: "/etc/unbound/root.hints"   # Fichier des serveurs racine
+
+    # Journalisation (facultatif)
+    verbosity: 1                        # Niveau de journalisation (0 = silencieux, 4 = très verbeux)
+
+# Ajoutez ici des zones locales ou personnalisées si nécessaire
+
+

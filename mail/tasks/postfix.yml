@@ -26,6 +26,8 @@
     restart_policy: always
     state: started
     pull: true
+    dns_servers:
+      - "{{ mail_unbound_ipv4_address }}"
     cap_drop:
       - all
     capabilities:

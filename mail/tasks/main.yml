@@ -35,6 +35,9 @@
 - name: Install dhparam
   ansible.builtin.include_tasks: dhparam.yml
 
+- name: Install unbound
+  ansible.builtin.include_tasks: unbound.yml
+  
 - name: Install postfix
   ansible.builtin.include_tasks: postfix.yml
 

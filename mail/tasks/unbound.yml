@@ -1,0 +1,38 @@
+- name: Create unbound volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ unbound_vol_path }}"
+    mode: '700'
+    state: directory
+    owner: "{{ userns_root_uid|int + unbound_uid }}"
+    group: "{{ userns_root_uid|int + unbound_gid }}"
+
+- name: Copy unbound config
+  become: true
+  ansible.builtin.template:
+    src: unbound/unbound.conf.j2
+    dest: "{{ unbound_vol_path }}/unbound.conf"
+    mode: '644'
+    owner: "{{ userns_root_uid|int + unbound_uid }}"
+    group: "{{ userns_root_uid|int + unbound_gid }}"
+
+- name: Unbound container
+  become: true
+  community.docker.docker_container:
+    name: "{{ unbound_container_name }}"
+    image: "alpinelinux/unbound"
+    restart_policy: always
+    state: started
+    user: "{{ unbound_uid }}:{{ unbound_gid }}"
+    pull: true
+    cap_drop:
+      - all
+    capabilities:
+      - chown
+      - net_bind_service
+    networks:
+      - name: "{{ mail_bridge_name }}"
+        ipv4_address: "{{ mail_unbound_ipv4_address }}"
+        ipv6_address: "{{ mail_unbound_ipv6_address }}"
+    volumes:
+      - "{{ unbound_vol_path }}:{{ unbound_config_mount_path }}"

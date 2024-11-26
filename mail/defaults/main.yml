@@ -29,3 +29,9 @@ dovecot_vmail_gid: 5000
 dovecot_imaps_port: 10993
 dovecot_sasl_port: 9998
 dovecot_lmtp_port: 9999
+
+unbound_vol_path: "{{ mail_vol_base }}/unbound"
+unbound_config_mount_path: "/etc/unbound"
+unbound_uid: 100
+unbound_gid: 101
+unbound_container_name: unbound
