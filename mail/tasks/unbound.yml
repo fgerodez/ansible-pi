@@ -6,7 +6,7 @@
     state: directory
     owner: "{{ userns_root_uid|int + unbound_uid }}"
     group: "{{ userns_root_uid|int + unbound_gid }}"
-
+    
 - name: Copy unbound config
   become: true
   ansible.builtin.template:

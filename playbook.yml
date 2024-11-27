@@ -8,16 +8,16 @@
 
     - role: minidlna
       
-    - role: nextcloud
+    - { role: nextcloud, tags: nextcloud }
       
     - role: torrent
     
-    - role: sonarr
+    - { role: sonarr, tags: sonarr }
 
-    - role: radarr
+    - { role: radarr, tags: radarr }
 
-    - role: prowlarr
+    - { role: prowlarr, tags: prowlarr }
       
-    - role: mail
+    - { role: mail, tags: mail }
    
     - role: caddy
