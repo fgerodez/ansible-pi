@@ -1,0 +1,42 @@
+- name: Create docker network
+  become: true
+  community.docker.docker_network:
+    name: "{{ pihole_bridge_name }}"
+    enable_ipv6: yes
+    ipam_config:
+      - subnet: "{{ pihole_network_ipv6_subnet }}"
+      - subnet: "{{ pihole_network_subnet }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ pihole_bridge_name }}"
+
+- name: Create volumes
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: 0700
+    state: directory
+    owner: "{{ pihole_uid }}"
+    group: "{{ pihole_gid }}"
+  loop:
+    - "{{ pihole_vol_base }}/dnsmasq"
+    - "{{ pihole_vol_base }}/pihole"
+    
+- name: Create docker container
+  become: true
+  community.docker.docker_container:
+    name: "{{ pihole_container_name }}"
+    image: "{{ pihole_docker_image }}"
+    restart_policy: unless-stopped
+    pull: true
+    networks:
+      - name: "{{ pihole_bridge_name }}"
+        ipv6_address: "{{ pihole_ipv6_address }}"
+        ipv4_address: "{{ pihole_ipv4_address }}"
+    state: started
+    env:
+      TZ: "Europe/Paris"
+      WEBPASSWORD: "{{ pihole_web_password }}"
+      WEBLOGS_STDOUT: "1"
+    volumes:
+      - "{{ pihole_vol_base }}/dnsmasq:{{ pihole_dnsmasq_vol_mount }}"
+      - "{{ pihole_vol_base }}/pihole:{{ pihole_vol_mount }}"

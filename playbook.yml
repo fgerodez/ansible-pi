@@ -19,5 +19,7 @@
     - { role: prowlarr, tags: prowlarr }
       
     - { role: mail, tags: mail }
-   
-    - role: caddy
+
+    - { role: pihole, tags: pihole }
+    
+    - { role: caddy, tags: caddy }

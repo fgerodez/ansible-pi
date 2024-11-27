@@ -1,0 +1,7 @@
+pihole_vol_base: "{{ docker_vol_base}}/pihole"
+pihole_uid: "{{ userns_root_uid|int + 999 }}"
+pihole_gid: "{{ userns_root_uid|int + 999 }}"
+pihole_container_name: pihole
+pihole_docker_image: "pihole/pihole:latest"
+pihole_vol_mount: "/etc/pihole"
+pihole_dnsmasq_vol_mount: "/etc/dnsmasq.d"
