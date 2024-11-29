@@ -26,6 +26,7 @@
   community.docker.docker_container:
     name: "{{ pihole_container_name }}"
     image: "{{ pihole_docker_image }}"
+    hostname: "{{ pihole_container_name }}"
     restart_policy: unless-stopped
     pull: true
     networks:

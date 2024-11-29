@@ -4,7 +4,7 @@
   roles:
     - role: system
 
-    - role: nftables
+    - { role: nftables, tags: nftables }
 
     - role: minidlna
       
