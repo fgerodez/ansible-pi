@@ -4,22 +4,44 @@
   roles:
     - role: system
 
-    - { role: nftables, tags: nftables }
+    - role: newrelic.newrelic_install
+      become: true
+      vars:
+        targets:
+          - infrastructure
+          - logs
+      tags: monitoring
+      environment:
+        NEW_RELIC_API_KEY: "{{ newrelic_api_key }}"
+        NEW_RELIC_ACCOUNT_ID: "{{ newrelic_account_id }}"
+        NEW_RELIC_REGION: "{{ newrelic_region }}"
+
+    - role: nftables
+      tags: firewall
 
     - role: minidlna
-      
-    - { role: nextcloud, tags: nextcloud }
-      
+      tags: minidlna
+
+    - role: nextcloud
+      tags: nextcloud
+
     - role: torrent
-    
-    - { role: sonarr, tags: sonarr }
+      tags: torrent
 
-    - { role: radarr, tags: radarr }
+    - role: sonarr
+      tags: sonarr
 
-    - { role: prowlarr, tags: prowlarr }
-      
-    - { role: mail, tags: mail }
+    - role: radarr
+      tags: radarr
 
-    - { role: pihole, tags: pihole }
-    
-    - { role: caddy, tags: caddy }
+    - role: prowlarr
+      tags: prowlarr
+
+    - role: mail
+      tags: mail
+
+    - role: pihole
+      tags: pihole
+
+    - role: caddy
+      tags: caddy
