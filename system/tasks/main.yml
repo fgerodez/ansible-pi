@@ -14,6 +14,10 @@
       - ssh
       - ssmtp
       - mediainfo
+      - curl
+      - python3
+      - python3-requests
+      - systemd-resolved
 
 - name: Copy ssmtp config
   become: true

@@ -5,6 +5,7 @@
     enable_ipv6: yes
     ipam_config:
       - subnet: "{{ prowlarr_network_ipv6_subnet }}"
+      - subnet: "{{ prowlarr_network_subnet }}"
     driver_options:
       com.docker.network.bridge.name: "{{ prowlarr_bridge_name }}"
 
@@ -28,6 +29,7 @@
     networks:
       - name: "{{ prowlarr_bridge_name }}"  
         ipv6_address: "{{ prowlarr_ipv6_address }}"
+        ipv4_address: "{{ prowlarr_ipv4_address }}"
     state: started
     cap_drop:
       - all

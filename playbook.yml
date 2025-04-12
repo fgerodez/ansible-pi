@@ -1,20 +1,8 @@
-- hosts: pi
+- hosts: main
   vars_files:
     - ./external_vars.yml
   roles:
     - role: system
-
-    - role: newrelic.newrelic_install
-      become: true
-      vars:
-        targets:
-          - infrastructure
-          - logs
-      tags: monitoring
-      environment:
-        NEW_RELIC_API_KEY: "{{ newrelic_api_key }}"
-        NEW_RELIC_ACCOUNT_ID: "{{ newrelic_account_id }}"
-        NEW_RELIC_REGION: "{{ newrelic_region }}"
 
     - role: nftables
       tags: firewall

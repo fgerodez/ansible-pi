@@ -31,7 +31,6 @@
     image: certbot/dns-ovh
     command: "certonly \
     --dns-ovh \
-    --network {{ mail_bridge_name }} \
     --dns-ovh-credentials /etc/letsencrypt/ovh.ini \
     --dns-ovh-propagation-seconds 60 \
     --non-interactive \
