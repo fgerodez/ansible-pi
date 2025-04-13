@@ -1,0 +1,5 @@
+[Match]
+Name=wlp1s0
+
+[Link]
+Unmanaged=yes
