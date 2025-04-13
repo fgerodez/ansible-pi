@@ -1,6 +1,8 @@
 {{ caddy_radarr_hostname }} {
   reverse_proxy {{ caddy_radarr_target }}
 
+  header Alt-Svc "{{ caddy_https_port }}" 443
+
   log {
     output stderr
   }

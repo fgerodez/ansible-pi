@@ -1,6 +1,8 @@
 {{ caddy_prowlarr_hostname }} {
   reverse_proxy {{ caddy_prowlarr_target }}
 
+  header Alt-Svc "{{ caddy_https_port }}" 443
+
   log {
     output stderr
   }
