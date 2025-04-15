@@ -9,24 +9,11 @@ table inet filter {
 	chain prerouting-dnat {
 		type nat hook prerouting priority dstnat;
 
-		# transfers traffic to postfix for port 25 ipv4 and ipv6
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 25 dnat to {{ nftables_postfix_ipv4 }}:2525
-		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 25 dnat to [{{ nftables_postfix_ipv6 }}]:2525
-
-		# transfers traffic to postfix for port 587 ipv4 and ipv6
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 587 dnat to {{ nftables_postfix_ipv4 }}:25587
-		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 587 dnat to [{{ nftables_postfix_ipv6 }}]:25587
-
-		# transfers traffic to dovecot for ports 993/4190
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 4190 dnat to {{ nftables_dovecot_ipv4 }}
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 993 dnat to {{ nftables_dovecot_ipv4 }}
-
-		# transfers traffic to reverse proxy for port 80/443
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 80 dnat to {{ nftables_caddy_ipv4 }}
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 443 dnat to {{ nftables_caddy_ipv4 }}
-
-		# transfers traffic to pihole for local network and port 53
-		ip saddr {{ nftables_host_ipv4_subnet }} ip daddr {{ nftables_host_ipv4 }} udp dport 53 dnat to {{ nftables_pihole_ipv4 }}:53
+		# DNAT incoming ipv4 traffic
+		ip daddr {{ nftables_host_ipv4 }} tcp dport { 25, 587 } dnat to {{ nftables_postfix_ipv4 }}	
+		ip daddr {{ nftables_host_ipv4 }} tcp dport { 993, 4190 } dnat to {{ nftables_dovecot_ipv4 }}
+		ip daddr {{ nftables_host_ipv4 }} tcp dport { 80, 443 } dnat to {{ nftables_caddy_ipv4 }}
+		ip saddr {{ nftables_host_ipv4_subnet }} ip daddr {{ nftables_host_ipv4 }} udp dport 53 dnat to {{ nftables_pihole_ipv4 }}
 
 		# transfers wireguard incoming traffic to transmission container
 		# uses iifname instead of iff here because the wireguard interface can be recreated frequently.
@@ -90,7 +77,8 @@ table inet filter {
 		ip6 saddr {{ nftables_host_ipv6_subnet }} ip6 daddr {{ nftables_pihole_ipv6 }} udp dport 53 accept
 		ip6 daddr {{ nftables_caddy_ipv6 }} meta l4proto { tcp, udp } th dport { 80, 443 } accept
 		ip6 daddr {{ nftables_dovecot_ipv6 }} tcp dport { 993, 4190 } accept
-
+		ip6 daddr {{ nftables_postfix_ipv6 }} tcp dport { 25, 587 } accept
+		
 		# allows internet access for specified networks
 		iifname {{ nftables_internet_networks }} oifname {{ nftables_host_interface }} accept
 

@@ -19,7 +19,7 @@
 - name: Check certificate existence
   become: true
   ansible.builtin.stat:
-    path: "{{ mail_vol_base }}/certbot/live/{{ mail_hostname }}"
+    path: "{{ mail_vol_base }}/certbot/live/{{ mail_cert_name }}"
   register: certFolder
     
 - name: Initialize ssl certificate
@@ -36,7 +36,8 @@
     --non-interactive \
     --agree-tos \
     --email {{ mail_owner_email }} \
-    --domains {{ mail_hostname }}"
+    --cert-name {{ mail_cert_name }} \
+    --domains {{ mail_cert_hostnames }}"
     volumes:
       - "{{ mail_vol_base }}/certbot:/etc/letsencrypt"
       - "{{ mail_vol_base }}/ovh.ini:/etc/letsencrypt/ovh.ini:ro"
