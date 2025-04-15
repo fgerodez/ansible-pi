@@ -26,7 +26,7 @@ dovecot_mail_path: /var/mail
 dovecot_container_name: dovecot
 dovecot_vmail_uid: 5000
 dovecot_vmail_gid: 5000
-dovecot_imaps_port: 10993
+dovecot_imaps_port: 993
 dovecot_sasl_port: 9998
 dovecot_lmtp_port: 9999
 

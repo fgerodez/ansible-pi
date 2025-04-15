@@ -1,0 +1,11 @@
+interface {{ interface }}
+{
+    AdvSendAdvert on;
+    AdvDefaultLifetime 0; #Prevent the server from being added as a default nexthop
+
+    route {{ delegated_prefix }}
+    {
+        AdvRoutePreference medium;
+        RemoveRoute on;
+    };
+};

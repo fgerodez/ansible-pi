@@ -1,8 +1,8 @@
 caddy_docker_container: caddy
 caddy_docker_image: caddy:2.7
 caddy_network_name: caddy
-caddy_http_port: 8080
-caddy_https_port: 8443
+caddy_http_port: 80
+caddy_https_port: 443
 caddy_uid: 1000
 caddy_gid: 1000
 caddy_host_uid: "{{ userns_root_uid|int + caddy_uid|int }}"

@@ -3,8 +3,11 @@ Name={{ system_interface_name }}
 
 [Network]
 DHCP=ipv4
-Address={{ system_ipv6_address }}
-IPv6AcceptRA=no
+DNS=9.9.9.9 149.112.112.112 2620:fe::fe 2620:fe::9
+MulticastDNS=true
 
-[DHCPv4]
-UseDNS=no
+[DHCP]
+UseDNS=false
+
+[IPv6AcceptRA]
+UseDNS=false

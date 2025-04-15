@@ -1,8 +1,6 @@
 {{ caddy_transmission_hostname }} {
   reverse_proxy {{ caddy_transmission_target }}
 
-  header Alt-Svc "{{ caddy_https_port }}" 443
-
   basicauth * {
     {{ caddy_transmission_auth }}
   }

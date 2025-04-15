@@ -19,6 +19,7 @@
       - python3-requests
       - systemd-resolved
       - rclone
+      - radvd
 
 - name: Copy ssmtp config
   become: true
@@ -42,20 +43,20 @@
     dest: "/etc/systemd/network/{{ system_systemd_network }}.network"
     mode: "644"
 
-- name: Copy wireless network config
-  become: true
-  notify: "Restart networking"
-  ansible.builtin.copy:
-    src: 02-wireless.network
-    dest: "/etc/systemd/network/02-wireless.network"
-    mode: "644"
-
 - name: Create dropin folder
   become: true
   ansible.builtin.file:
     path: "/etc/systemd/network/{{ system_systemd_network }}.network.d"
     state: "directory"
     mode: "755"
+
+- name: Copy radvd config
+  become: true
+  notify: "Restart radvd"
+  ansible.builtin.template:
+    src: radvd.conf.j2
+    dest: "/etc/radvd.conf"
+    mode: "644"
 
 - name: Set sysctl values
   become: true

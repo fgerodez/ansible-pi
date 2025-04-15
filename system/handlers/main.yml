@@ -3,3 +3,9 @@
   ansible.builtin.systemd:
     name: systemd-networkd.service
     state: "restarted"  
+
+- name: Restart radvd
+  become: true
+  ansible.builtin.systemd:
+    name: radvd.service
+    state: "restarted"  

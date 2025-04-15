@@ -1,8 +1,6 @@
 {{ caddy_nextcloud_hostname }} {
       root * {{ caddy_nextcloud_mount_path }}
 
-	  header Alt-Svc "{{ caddy_https_port }}" 443
-
       php_fastcgi {{ caddy_nextcloud_target }} {
         root {{ caddy_nextcloud_php_root }}
 	  }

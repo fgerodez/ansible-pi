@@ -13,7 +13,7 @@
   become: true
   ansible.builtin.file:
     path: "{{ item }}"
-    mode: 0700
+    mode: 0755
     state: directory
     owner: "{{ pihole_uid }}"
     group: "{{ pihole_gid }}"

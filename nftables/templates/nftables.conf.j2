@@ -17,25 +17,16 @@ table inet filter {
 		ip daddr {{ nftables_host_ipv4 }} tcp dport 587 dnat to {{ nftables_postfix_ipv4 }}:25587
 		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 587 dnat to [{{ nftables_postfix_ipv6 }}]:25587
 
-		# transfers traffic to dovecot for port 4190
+		# transfers traffic to dovecot for ports 993/4190
 		ip daddr {{ nftables_host_ipv4 }} tcp dport 4190 dnat to {{ nftables_dovecot_ipv4 }}
-		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 4190 dnat to {{ nftables_dovecot_ipv6 }}
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 993 dnat to {{ nftables_dovecot_ipv4 }}
 
-		# transfers traffic to dovecot for port 993
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 993 dnat to {{ nftables_dovecot_ipv4 }}:10993
-		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 993 dnat to [{{ nftables_dovecot_ipv6 }}]:10993
-
-		# transfers traffic to reverse proxy for port 80
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 80 dnat to {{ nftables_caddy_ipv4 }}:8080
-		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 80 dnat to [{{ nftables_caddy_ipv6 }}]:8080
-
-		# transfers traffic to reverse proxy for port 443
-		ip daddr {{ nftables_host_ipv4 }} tcp dport 443 dnat to {{ nftables_caddy_ipv4 }}:8443
-		ip6 daddr {{ nftables_host_ipv6 }} tcp dport 443 dnat to [{{ nftables_caddy_ipv6 }}]:8443
+		# transfers traffic to reverse proxy for port 80/443
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 80 dnat to {{ nftables_caddy_ipv4 }}
+		ip daddr {{ nftables_host_ipv4 }} tcp dport 443 dnat to {{ nftables_caddy_ipv4 }}
 
 		# transfers traffic to pihole for local network and port 53
 		ip saddr {{ nftables_host_ipv4_subnet }} ip daddr {{ nftables_host_ipv4 }} udp dport 53 dnat to {{ nftables_pihole_ipv4 }}:53
-		ip6 saddr {{ nftables_host_ipv6_subnet }} ip6 daddr {{ nftables_host_ipv6 }} udp dport 53 dnat to [{{ nftables_pihole_ipv6 }}]:53
 
 		# transfers wireguard incoming traffic to transmission container
 		# uses iifname instead of iff here because the wireguard interface can be recreated frequently.
@@ -86,14 +77,19 @@ table inet filter {
     chain forward {
         type filter hook forward priority 0; policy drop
 
+		# allows icmpv6 with a rate limit
+		icmpv6 type { destination-unreachable, time-exceeded, echo-request, echo-reply } limit rate 1000/second accept
+
 		# allows dnat connections
 		ct status dnat accept
 
         # allows established connections
         ct state { related, established } accept
 
-		# disables forwarding to local ipv4 network
-		ip daddr {{ nftables_host_ipv4_subnet }} drop
+		# Enable inbound traffic
+		ip6 saddr {{ nftables_host_ipv6_subnet }} ip6 daddr {{ nftables_pihole_ipv6 }} udp dport 53 accept
+		ip6 daddr {{ nftables_caddy_ipv6 }} meta l4proto { tcp, udp } th dport { 80, 443 } accept
+		ip6 daddr {{ nftables_dovecot_ipv6 }} tcp dport { 993, 4190 } accept
 
 		# allows internet access for specified networks
 		iifname {{ nftables_internet_networks }} oifname {{ nftables_host_interface }} accept
@@ -113,3 +109,4 @@ table inet filter {
         meta nfproto ipv4 oifname {{ nftables_masquerade_networks }} masquerade
     }
 }
+
