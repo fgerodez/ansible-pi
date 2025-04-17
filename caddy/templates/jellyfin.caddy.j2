@@ -1,0 +1,7 @@
+{{ caddy_jellyfin_hostname }} {
+  reverse_proxy {{ caddy_jellyfin_target }}
+
+  log {
+    output stderr
+  }
+}

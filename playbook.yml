@@ -31,5 +31,8 @@
     - role: pihole
       tags: pihole
 
+    - role: jellyfin
+      tags: jellyfin
+      
     - role: caddy
       tags: caddy

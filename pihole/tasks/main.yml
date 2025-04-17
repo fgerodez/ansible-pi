@@ -41,3 +41,4 @@
     volumes:
       - "{{ pihole_vol_base }}/dnsmasq:{{ pihole_dnsmasq_vol_mount }}"
       - "{{ pihole_vol_base }}/pihole:{{ pihole_vol_mount }}"
+

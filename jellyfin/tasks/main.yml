@@ -1,0 +1,52 @@
+- name: Create docker network
+  become: true
+  community.docker.docker_network:
+    name: "{{ jellyfin_bridge_name }}"
+    enable_ipv6: yes
+    ipam_config:
+      - subnet: "{{ jellyfin_network_ipv6_subnet }}"
+      - subnet: "{{ jellyfin_network_subnet }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ jellyfin_bridge_name }}"
+
+- name: Create volumes
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: 0755
+    state: directory
+    owner: "{{ jellyfin_uid }}"
+    group: "{{ jellyfin_gid }}"
+  loop:
+    - "{{ jellyfin_vol_base }}/config"
+    - "{{ jellyfin_vol_base }}/cache"
+
+- name: Allow access to DRI
+  become: true
+  ansible.posix.acl:
+    path: /dev/dri/renderD128
+    entity: "{{ jellyfin_uid }}"
+    etype: user
+    permissions: rw
+    state: present
+    
+- name: Create docker container
+  become: true
+  community.docker.docker_container:
+    name: "{{ jellyfin_container_name }}"
+    user: "1200:1200"
+    image: "{{ jellyfin_docker_image }}"
+    hostname: "{{ jellyfin_container_name }}"
+    restart_policy: unless-stopped
+    pull: true
+    devices:
+      - "/dev/dri:/dev/dri"
+    networks:
+      - name: "{{ jellyfin_bridge_name }}"
+        ipv6_address: "{{ jellyfin_ipv6_address }}"
+        ipv4_address: "{{ jellyfin_ipv4_address }}"
+    state: started
+    volumes:
+      - "{{ jellyfin_vol_base }}/config:/config"
+      - "{{ jellyfin_vol_base }}/cache:/cache"
+      - "{{ media_vol_base }}:/media"

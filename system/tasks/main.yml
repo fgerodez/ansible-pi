@@ -8,6 +8,7 @@
   become: true
   ansible.builtin.apt:
     pkg:
+      - acl
       - e2fsprogs
       - dphys-swapfile
       - vim

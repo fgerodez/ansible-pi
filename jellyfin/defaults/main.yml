@@ -1,0 +1,6 @@
+jellyfin_uid: "{{ userns_root_uid|int + 1200 }}"
+jellyfin_gid: "{{ userns_root_uid|int + 1200 }}"
+jellyfin_vol_base: "{{ docker_vol_base }}/jellyfin"
+jellyfin_container_name: jellyfin
+jellyfin_docker_image: "jellyfin/jellyfin"
+jellyfin_vol_mount: /data
