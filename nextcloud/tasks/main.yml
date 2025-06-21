@@ -18,9 +18,10 @@
     mode: "700"
     owner: root
     group: root
+
+- name: Install mariadb
+  ansible.builtin.include_tasks: mariadb.yml
     
 - name: Install nextcloud
   ansible.builtin.include_tasks: nextcloud.yml
 
-- name: Install mariadb
-  ansible.builtin.include_tasks: mariadb.yml

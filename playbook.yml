@@ -3,6 +3,7 @@
     - ./external_vars.yml
   roles:
     - role: system
+      tags: system
 
     - role: nftables
       tags: firewall

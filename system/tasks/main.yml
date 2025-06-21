@@ -21,6 +21,7 @@
       - systemd-resolved
       - rclone
       - radvd
+      - ntp
 
 - name: Copy ssmtp config
   become: true
