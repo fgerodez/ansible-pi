@@ -4,7 +4,8 @@ Name={{ system_interface_name }}
 [Network]
 DHCP=ipv4
 DNS=9.9.9.9 149.112.112.112 2620:fe::fe 2620:fe::9
-MulticastDNS=true
+MulticastDNS=false
+Address={{ delegated_ipv6 }}
 
 [DHCP]
 UseDNS=false
