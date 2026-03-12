@@ -1,7 +1,7 @@
 bazarr_bridge_name: bazarr
 bazarr_vol_base: "{{ docker_vol_base }}/bazarr"
-bazarr_uid: "{{ userns_root_uid|int + 1000 }}"
-bazarr_gid: "{{ userns_root_uid|int + 1000 }}"
+bazarr_uid: "{{ userns_root_uid|int + 999 }}"
+bazarr_gid: "{{ userns_root_uid|int + 999 }}"
 bazarr_container_name: bazarr
 bazarr_docker_image: mahoneko/bazarr:latest
 bazarr_user: bazarr

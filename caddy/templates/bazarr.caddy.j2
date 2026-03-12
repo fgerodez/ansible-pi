@@ -1,0 +1,7 @@
+{{ caddy_bazarr_hostname }} {
+  reverse_proxy {{ caddy_bazarr_target }}
+
+  log {
+    output stderr
+  }
+}
