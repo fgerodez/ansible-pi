@@ -23,6 +23,9 @@
     - role: prowlarr
       tags: prowlarr
 
+    - role: bazarr
+      tags: bazarr
+      
     - role: mail
       tags: mail
 

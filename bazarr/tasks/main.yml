@@ -1,0 +1,37 @@
+- name: Create docker network
+  become: true
+  community.docker.docker_network:
+    name: "{{ bazarr_bridge_name }}"
+    enable_ipv6: yes
+    ipam_config:
+      - subnet: "{{ bazarr_network_ipv6_subnet }}"
+      - subnet: "{{ bazarr_network_subnet }}"
+    driver_options:
+      com.docker.network.bridge.name: "{{ bazarr_bridge_name }}"
+   
+- name: Create data volume
+  become: true
+  ansible.builtin.file:
+    path: "{{ bazarr_vol_base }}"
+    mode: 0700
+    state: directory
+    owner: "{{ bazarr_uid }}"
+    group: "{{ bazarr_gid }}"
+
+- name: Create docker container
+  become: true
+  community.docker.docker_container:
+    name: "{{ bazarr_container_name }}"
+    image: "{{ bazarr_docker_image }}"
+    restart_policy: always
+    pull: true
+    networks:
+      - name: "{{ bazarr_bridge_name }}"
+        ipv6_address: "{{ bazarr_ipv6_address }}"
+        ipv4_address: "{{ bazarr_ipv4_address }}"
+    state: started
+    cap_drop:
+      - all    
+    volumes:
+      - "{{ bazarr_vol_base }}:{{ bazarr_vol_mount }}"
+      - "{{ media_vol_base }}:{{ media_mount_point }}"
