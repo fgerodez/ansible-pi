@@ -16,7 +16,7 @@ nextcloud_backup_script: "/usr/local/bin/nextcloud-backup.sh"
 
 nextcloud_mariadb_docker_container: "nextcloud_mariadb"
 nextcloud_mariadb_docker_alias: "mariadb"
-nextcloud_mariadb_version: 10.6
+nextcloud_mariadb_version: 10.11
 nextcloud_mariadb_uid: 999
 nextcloud_mariadb_gid: 999
 nextcloud_mariadb_vol_uid: "{{ userns_root_uid|int + nextcloud_mariadb_uid|int }}"

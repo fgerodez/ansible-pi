@@ -26,6 +26,7 @@
     name: "{{ nextcloud_docker_container }}"
     image: "mahoneko/nextcloud:latest"
     restart_policy: always
+    hostname: "{{ nextcloud_hostname }}"
     user: "{{ nextcloud_uid }}:{{ nextcloud_gid }}"
     pull: true
     networks:
