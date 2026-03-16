@@ -47,6 +47,5 @@
       - "{{ postfix_vol_path}}/master.cf:{{ postfix_config_mount_path }}/master.cf"
       - "{{ postfix_vol_path}}/virtual-mailbox-domains.cf:{{ postfix_config_mount_path }}/virtual-mailbox-domains.cf"
       - "{{ postfix_vol_path}}/maps.cf:{{ postfix_config_mount_path }}/maps.cf"
-      - "{{ mail_vol_base }}/dhparam.pem:{{ postfix_config_mount_path }}/dhparam.pem:ro"
       - "{{ mail_vol_base }}/mail.sqlite:{{ postfix_config_mount_path }}/mail.sqlite:ro"
 

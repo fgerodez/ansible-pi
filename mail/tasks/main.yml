@@ -32,9 +32,6 @@
 - name: Install certbot
   ansible.builtin.include_tasks: certbot.yml
 
-- name: Install dhparam
-  ansible.builtin.include_tasks: dhparam.yml
-
 - name: Install unbound
   ansible.builtin.include_tasks: unbound.yml
   
