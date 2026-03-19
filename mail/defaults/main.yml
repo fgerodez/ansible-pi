@@ -1,6 +1,5 @@
 mail_bridge_name: mail
 mail_vol_base: "{{ docker_vol_base }}/mail"
-dhparam_size: 4096
 
 postfix_vol_path: "{{ mail_vol_base }}/postfix"
 postfix_container_name: postfix

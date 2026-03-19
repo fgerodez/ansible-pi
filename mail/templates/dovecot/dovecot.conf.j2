@@ -9,7 +9,7 @@ dovecot_config_version = 2.4.2
 dovecot_storage_version = 2.4.2
 
 # Enable installed protocols
-protocols = imap lmtp
+protocols = imap lmtp sieve
 
 # A comma separated list of IPs or hosts where to listen in for connections. 
 # "*" listens in all IPv4 interfaces, "::" listens in all IPv6 interfaces.
@@ -66,8 +66,10 @@ service auth {
 #
 # Tranfert de mail de postfix à dovecot
 protocol lmtp {
-  postmaster_address = postmaster@%{user|domain} 
-#  mail_plugins = $mail_plugins sieve
+  postmaster_address = postmaster@%{user|domain}
+  mail_plugins {
+    sieve = yes
+  }
 }
 
 service lmtp {
@@ -89,11 +91,10 @@ service managesieve-login {
   chroot =
 }
 
-# Configuration plugin sieve
 #plugin {
 #  # The path to the user's main active script. If ManageSieve is used, this the
 #  # location of the symbolic link controlled by ManageSieve.
-#  sieve = /var/mail/%{user|domain}/%{user|username}/.dovecot.sieve
+#  sieve = 
 #
 #  # Directory for :personal include scripts for the include extension. This
 #  # is also where the ManageSieve service stores the user's scripts.
