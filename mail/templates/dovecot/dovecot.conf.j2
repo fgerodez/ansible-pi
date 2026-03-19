@@ -5,8 +5,11 @@
 # "doveconf -n" command gives a clean output of the changed settings. Use it
 # instead of copy&pasting files when posting to the Dovecot mailing list.
 
+dovecot_config_version = 2.4.2
+dovecot_storage_version = 2.4.2
+
 # Enable installed protocols
-protocols = imap lmtp sieve
+protocols = imap lmtp
 
 # A comma separated list of IPs or hosts where to listen in for connections. 
 # "*" listens in all IPv4 interfaces, "::" listens in all IPv6 interfaces.
@@ -16,27 +19,26 @@ listen = *, ::
 
 # Configuration SSL
 ssl = required
-ssl_min_protocol = TLSv1.2
-ssl_cipher_list = ALL:!DH:!kRSA:!SRP:!kDHd:!DSS:!aNULL:!eNULL:!EXPORT:!DES:!3DES:!MD5:!PSK:!RC4:!ADH:!LOW@STRENGTH
-ssl_dh=</etc/dovecot/dhparam.pem
-ssl_cert = </etc/letsencrypt/live/{{ mail_cert_name }}/fullchain.pem
-ssl_key  = </etc/letsencrypt/live/{{ mail_cert_name }}/privkey.pem
+ssl_min_protocol = TLSv1.3
+ssl_server_cert_file = /etc/letsencrypt/live/{{ mail_cert_name }}/fullchain.pem
+ssl_server_key_file  = /etc/letsencrypt/live/{{ mail_cert_name }}/privkey.pem
 
-disable_plaintext_auth=yes
-
-mail_home = /var/mail/%d/%n
-mail_location = maildir:~/mail
+mail_home = /var/mail/%{user|domain}/%{user|username}
+mail_driver = maildir
+mail_path = ~/mail
 mail_uid = {{ dovecot_vmail_uid }}
 mail_gid = {{ dovecot_vmail_gid }}
 
-# Configuration des utilisateurs
-userdb {
-  driver = static
-}
-
-passdb {
-  driver = sql
-  args = /etc/dovecot/dovecot-sql.conf.ext    
+passdb sql {
+  sql_driver = sqlite
+  sqlite_path = /etc/dovecot/mail.sqlite
+  passdb_default_password_scheme = SHA512-CRYPT
+  query = \
+  		SELECT user.username || '@' || domain.name AS user, password \
+		FROM virtual_users user \
+		JOIN virtual_domains domain on domain.id = user.domain_id \
+		WHERE domain.name = '%{user|domain}' \
+		AND user.username = '%{user|username}'
 }
 
 # Configuration IMAP
@@ -64,8 +66,8 @@ service auth {
 #
 # Tranfert de mail de postfix à dovecot
 protocol lmtp {
-  postmaster_address = postmaster@%d 
-  mail_plugins = $mail_plugins sieve
+  postmaster_address = postmaster@%{user|domain} 
+#  mail_plugins = $mail_plugins sieve
 }
 
 service lmtp {
@@ -88,15 +90,15 @@ service managesieve-login {
 }
 
 # Configuration plugin sieve
-plugin {
-  # The path to the user's main active script. If ManageSieve is used, this the
-  # location of the symbolic link controlled by ManageSieve.
-  sieve = /var/mail/%d/%n/.dovecot.sieve
-
-  # Directory for :personal include scripts for the include extension. This
-  # is also where the ManageSieve service stores the user's scripts.
-  sieve_dir = /var/mail/%d/%n/sieve
-}
+#plugin {
+#  # The path to the user's main active script. If ManageSieve is used, this the
+#  # location of the symbolic link controlled by ManageSieve.
+#  sieve = /var/mail/%{user|domain}/%{user|username}/.dovecot.sieve
+#
+#  # Directory for :personal include scripts for the include extension. This
+#  # is also where the ManageSieve service stores the user's scripts.
+#  sieve_dir = /var/mail/%{user|domain}/%{user|username}/sieve
+#}
 
 # Log everything to stdout
 log_path=/dev/stdout

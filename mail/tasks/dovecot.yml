@@ -61,6 +61,5 @@
       - "{{ mail_vol_base }}/certbot:/etc/letsencrypt:ro"
       - "{{ dovecot_vol_mail_path }}:{{ dovecot_mail_path }}"
       - "{{ dovecot_vol_config_path }}:{{ dovecot_config_mount_path }}"
-      - "{{ mail_vol_base }}/dhparam.pem:{{ dovecot_config_mount_path }}/dhparam.pem:ro"
       - "{{ mail_vol_base }}/mail.sqlite:{{ dovecot_config_mount_path }}/mail.sqlite:ro"
 
